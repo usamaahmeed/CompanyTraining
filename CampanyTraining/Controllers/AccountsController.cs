@@ -17,16 +17,14 @@ namespace CampanyTraining.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly JwtOptions _jwtOptions;
 
 
-        public AccountsController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, RoleManager<IdentityRole> roleManager , JwtOptions jwtOptions)
+        public AccountsController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,JwtOptions jwtOptions)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
-            this._roleManager = roleManager;
-            _jwtOptions = jwtOptions;
+            this._jwtOptions = jwtOptions;
         }
 
         [HttpPost("Register")]
