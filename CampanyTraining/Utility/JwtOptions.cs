@@ -1,4 +1,4 @@
-﻿namespace CampanyTraining.Utility
+﻿namespace CompanyTraining.Utility
 {
     public class JwtOptions
     {

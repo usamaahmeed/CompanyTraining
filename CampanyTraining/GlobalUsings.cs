@@ -1,11 +1,11 @@
-﻿global using CampanyTraining.Data;
-global using CampanyTraining.Models;
-global using CampanyTraining.DTOs.Response;
-global using CampanyTraining.DTOs.Request;
-global using CampanyTraining.Utility;
+﻿global using CompanyTraining.Data;
+global using CompanyTraining.Models;
+global using CompanyTraining.DTOs.Response;
+global using CompanyTraining.DTOs.Request;
+global using CompanyTraining.Utility;
 
-global using CampanyTraining.Repositories;
-global using CampanyTraining.Repositories.IRepositories;
+global using CompanyTraining.Repositories;
+global using CompanyTraining.Repositories.IRepositories;
 
 global using System.Linq.Expressions;
 global using Mapster;

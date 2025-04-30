@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CampanyTraining.Repositories
+namespace CompanyTraining.Repositories
 {
     public class Repository<T> : IRepository<T> where T : class
     {

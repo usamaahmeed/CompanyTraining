@@ -1,4 +1,4 @@
-﻿namespace CampanyTraining.MappingConfigration
+﻿namespace CompanyTraining.MappingConfigration
 {
     public class MappingConfig : IRegister
     {
@@ -7,7 +7,8 @@
             //config.NewConfig<CategoryRequest, Category>()
             //    .Map(des => des.Name, src => src.CategoryName)
             //    .Map(des => des.Description, src => src.Note);
-
+            config.NewConfig<RegisterDTO, ApplicationUser>()
+                .Map(des => des.UserName, src => src.CompanyName);
             //config.NewConfig<Cart, CartResponse>()
             //    .Map(dest => dest, src => src.Product)
             //    .Map(dest => dest.Count, src => src.Count);

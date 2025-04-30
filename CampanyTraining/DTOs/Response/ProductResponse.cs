@@ -1,4 +1,4 @@
-﻿namespace CampanyTraining.DTOs.Response
+﻿namespace CompanyTraining.DTOs.Response
 {
     public class ProductResponse
     {

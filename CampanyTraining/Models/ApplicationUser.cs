@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace CampanyTraining.Models
+namespace CompanyTraining.Models
 {
     public class ApplicationUser : IdentityUser
     {

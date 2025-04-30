@@ -1,4 +1,4 @@
-﻿namespace CampanyTraining.Repositories.IRepositories
+﻿namespace CompanyTraining.Repositories.IRepositories
 {
     public interface IRepository<T> where T : class
     {

@@ -1,4 +1,4 @@
-﻿using CampanyTraining.Utility;
+﻿using CompanyTraining.Utility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +9,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CampanyTraining.Controllers
+namespace CompanyTraining.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -30,8 +30,6 @@ namespace CampanyTraining.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
         {
-           
-
             ApplicationUser applicationUser = registerDTO.Adapt<ApplicationUser>();
 
             var result = await _userManager.CreateAsync(applicationUser, registerDTO.Password);
@@ -41,7 +39,7 @@ namespace CampanyTraining.Controllers
                 // Success Register
                 await _signInManager.SignInAsync(applicationUser, false);
 
-                await _userManager.AddToRoleAsync(applicationUser, "Customer");
+                await _userManager.AddToRoleAsync(applicationUser, "Company");
 
                 return NoContent();
             }
