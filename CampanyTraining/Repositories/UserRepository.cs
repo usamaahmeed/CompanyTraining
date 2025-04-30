@@ -1,4 +1,4 @@
-﻿namespace CampanyTraining.Repositories
+﻿namespace CompanyTraining.Repositories
 {
     public class UserRepository : Repository<ApplicationUser>, IUserRepository
     {

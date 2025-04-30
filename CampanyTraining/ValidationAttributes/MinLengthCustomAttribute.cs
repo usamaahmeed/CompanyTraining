@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CampanyTraining.ValidationAttributes
+namespace CompanyTraining.ValidationAttributes
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class MinLengthCustomAttribute : ValidationAttribute

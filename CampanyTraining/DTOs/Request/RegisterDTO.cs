@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CampanyTraining.DTOs.Request
+namespace CompanyTraining.DTOs.Request
 {
     public class RegisterDTO
     {
         [Required]
-        public string CampanyName { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
         [Required]
         [DataType(DataType.EmailAddress)]
         public string Email { get; set; } = string.Empty;

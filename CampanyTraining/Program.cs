@@ -7,7 +7,7 @@ using Scalar.AspNetCore;
 using System.Reflection;
 using System.Text;
 
-namespace CampanyTraining
+namespace CompanyTraining
 {
     public class Program
     {

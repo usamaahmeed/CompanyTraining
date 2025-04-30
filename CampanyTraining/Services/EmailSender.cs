@@ -2,7 +2,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Identity.UI.Services;
 
-namespace CampanyTraining.Services
+namespace CompanyTraining.Services
 {
     public class EmailSender : IEmailSender
     {

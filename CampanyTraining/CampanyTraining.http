@@ -1,6 +1,6 @@
-@CampanyTraining_HostAddress = http://localhost:5062
+@CompanyTraining_HostAddress = http://localhost:5062
 
-GET {{CampanyTraining_HostAddress}}/weatherforecast/
+GET {{CompanyTraining_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###

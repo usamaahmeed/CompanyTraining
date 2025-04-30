@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace CampanyTraining.Data
+namespace CompanyTraining.Data
 {
     public class DbInitializer
     {
@@ -31,7 +31,7 @@ namespace CampanyTraining.Data
             await context.Database.MigrateAsync();
 
             // List of default roles we want to ensure exist
-            var roles = new[] { "SuperAdmin", "Admin", "Campany", "User" };
+            var roles = new[] { "SuperAdmin", "Admin", "Company", "User" };
 
             // Check if each role exists; if not, create it
             foreach (var role in roles)
