@@ -1,1 +1,1 @@
-# CampanyTraining
+# CompanyTraining
