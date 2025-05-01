@@ -17,5 +17,9 @@ namespace CompanyTraining.DTOs.Request
         [Compare(nameof(Password))]
         public string ConfirmPassword { get; set; } = string.Empty;
         public string? Address { get; set; }
+        [Required]
+        public IFormFile MainImgFile { get; set; } = null!;
+        [Required]
+        public IFormFile CoverImgFile { get; set; } = null!;
     }
 }

@@ -6,5 +6,8 @@ namespace CompanyTraining.Models
     {
         public string? Address { get; set; }
 
+        public string MainImg { get; set; } = string.Empty;
+
+        public string CoverImg {  get; set; }=string .Empty;
     }
 }
