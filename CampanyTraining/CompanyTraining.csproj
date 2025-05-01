@@ -21,7 +21,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="images\" />
+		<Folder Include="images\company\mainimgs\" />
+		<Folder Include="images\company\coverimgs\" />
 	</ItemGroup>
 
 </Project>

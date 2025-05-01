@@ -1,4 +1,7 @@
-﻿using CompanyTraining.Utility;
+﻿using CompanyTraining.DTOs.Request;
+using CompanyTraining.Models;
+using CompanyTraining.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,60 +23,111 @@ namespace CompanyTraining.Controllers
         private readonly JwtOptions _jwtOptions;
 
 
-        public AccountsController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager,JwtOptions jwtOptions)
+        public AccountsController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, JwtOptions jwtOptions)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
             this._jwtOptions = jwtOptions;
         }
 
+        private bool IsValidFile(IFormFile formFile) => (formFile != null && formFile.Length > 0);
+
+        private string GenerateToken(ApplicationUser user)
+        {
+            // إنشاء التوكن
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Issuer = _jwtOptions.Issuer,
+                Audience = _jwtOptions.Audience,
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
+                    SecurityAlgorithms.HmacSha256
+                ),
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Email, user.Email)
+                }),
+            };
+
+            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(securityToken);
+        }
+
+        private async Task<string> SaveFileAsync(IFormFile file,string folderPath)
+        {
+            var fileName = Guid.NewGuid().ToString()+Path.GetExtension(file.FileName);
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), folderPath, fileName);
+            using (var stream = System.IO.File.Create(filePath))
+            {
+                await file.CopyToAsync(stream);
+            }
+            return fileName;
+        }
+       
+
         [HttpPost("Register")]
-        public async Task<IActionResult> Register([FromBody] RegisterDTO registerDTO)
+        public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
         {
             ApplicationUser applicationUser = registerDTO.Adapt<ApplicationUser>();
 
             var result = await _userManager.CreateAsync(applicationUser, registerDTO.Password);
 
-            if (result.Succeeded)
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+            if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
             {
-                // Success Register
-                await _signInManager.SignInAsync(applicationUser, false);
+                var mainImgFileName =await SaveFileAsync(registerDTO.MainImgFile, "images/company/mainimgs");
+                var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
 
-                await _userManager.AddToRoleAsync(applicationUser, "Company");
 
-                return NoContent();
+                applicationUser.MainImg = mainImgFileName;
+
+                applicationUser.CoverImg = coverImgFileName;
+
+                await _userManager.UpdateAsync(applicationUser);
             }
+            await _signInManager.SignInAsync(applicationUser, false);
+            await _userManager.AddToRoleAsync(applicationUser, "Company");
 
-            return BadRequest(result.Errors);
+            return Ok(new
+            {
+                Token = GenerateToken(applicationUser),
+                User = new
+                {
+                    applicationUser.Id,
+                    applicationUser.Email,
+                    applicationUser.UserName,
+                    applicationUser.MainImg,
+                    applicationUser.CoverImg,
+                }
+            });
         }
 
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDTO loginRequestDto)
         {
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+
             if (user == null) return NotFound(new { Message = "User not found" });
 
-            if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password)) return Unauthorized(new { Message = "Invalid email or password" });
+            if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+                return Unauthorized(new { Message = "Invalid email or password" });
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenDescriptor = new SecurityTokenDescriptor
+            await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+
+            return Ok(new
             {
-                Issuer = _jwtOptions.Issuer,
-                Audience = _jwtOptions.Audience,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
-                SecurityAlgorithms.HmacSha256),
-                Subject = new ClaimsIdentity(new Claim[]
+                Token = GenerateToken(user),
+                User = new
                 {
-            new (ClaimTypes.NameIdentifier, loginRequestDto.Email),
-            new (ClaimTypes.Email, loginRequestDto.Email)
-                }),
-            };
-            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
-            var accesstoken = tokenHandler.WriteToken(securityToken);
-
-            return Ok(accesstoken);
+                    user.Id,
+                    user.Email,
+                    user.UserName
+                }
+            });
         }
-
         //[HttpPost("Login")]
         //public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
         //{
@@ -99,21 +153,38 @@ namespace CompanyTraining.Controllers
         //    }
 
         //    return NotFound();
-        //}
+
 
         [HttpGet("Logout")]
         public async Task<IActionResult> Logout()
         {
+            var user = _userManager.GetUserId(User);
+            if (user == null)
+                return NotFound();
             await _signInManager.SignOutAsync();
             return NoContent();
         }
 
+        [HttpGet("Profile")]
+        [Authorize()]
+        public async Task<IActionResult> GetProfileInfo()
+        {
+            var appUser = await _userManager.GetUserAsync(User);
+            if(appUser == null )
+                return NotFound();
+            var profile = appUser.Adapt<ProfileResponse>();
+            return Ok(profile);
+        }
+       
+
         [HttpPut("ChangePassword")]
+        [Authorize()]
+
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePasswordDTO)
         {
             var user = await _userManager.GetUserAsync(User);
 
-            if(user is not null)
+            if (user is not null)
             {
 
                 var result = await _userManager.ChangePasswordAsync(user, changePasswordDTO.OldPassword, changePasswordDTO.NewPassword);
@@ -122,8 +193,6 @@ namespace CompanyTraining.Controllers
                 {
                     // Success Register
                     await _signInManager.SignInAsync(user, false);
-
-
                     return NoContent();
                 }
 
