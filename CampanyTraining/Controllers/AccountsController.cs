@@ -99,6 +99,7 @@ namespace CompanyTraining.Controllers
                     applicationUser.Id,
                     applicationUser.Email,
                     applicationUser.UserName,
+                    applicationUser.Address,
                     applicationUser.MainImg,
                     applicationUser.CoverImg,
                 }
@@ -124,7 +125,10 @@ namespace CompanyTraining.Controllers
                 {
                     user.Id,
                     user.Email,
-                    user.UserName
+                    user.UserName,
+                    user.Address,
+                    user.MainImg,
+                    user.CoverImg,
                 }
             });
         }
@@ -154,6 +158,8 @@ namespace CompanyTraining.Controllers
 
         //    return NotFound();
 
+        
+
 
         [HttpGet("Logout")]
         public async Task<IActionResult> Logout()
@@ -175,7 +181,77 @@ namespace CompanyTraining.Controllers
             var profile = appUser.Adapt<ProfileResponse>();
             return Ok(profile);
         }
-       
+
+        [HttpPut("EditProfile")]
+        public async Task<IActionResult> EditProfile([FromForm] ProfileRequest profileRequest)
+        {
+            bool isUpdated = false;
+            var userApp = await _userManager.GetUserAsync(User);
+            if (userApp == null)
+                return NotFound(); 
+              if(profileRequest.CompanyName != null)
+            {
+                userApp.UserName = profileRequest.CompanyName;
+                isUpdated = true;
+            }
+
+            if (profileRequest.Address != null)
+            {
+                userApp.Address = profileRequest.Address;
+                isUpdated = true;
+            }
+            if (profileRequest.Email != null)
+            {
+                userApp.Email = profileRequest.Email;
+                isUpdated = true;
+            }
+            if (IsValidFile(profileRequest.MainImgFile))
+            {
+                if(!string.IsNullOrEmpty(userApp.MainImg))
+                {
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "images/company/mainimgs", userApp.MainImg);
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+                userApp.MainImg = await SaveFileAsync(profileRequest.MainImgFile, "images/company/mainimgs");
+                isUpdated = true;
+            }
+
+            if (IsValidFile(profileRequest.CoverImgFile))
+            {
+                if (!string.IsNullOrEmpty(userApp.CoverImg))
+                {
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "images/company/coverimgs", userApp.CoverImg);
+                    if (System.IO.File.Exists(oldPath))
+                    {
+                        System.IO.File.Delete(oldPath);
+                    }
+                }
+                userApp.CoverImg = await SaveFileAsync(profileRequest.CoverImgFile, "images/company/coverimgs");
+                isUpdated = true;
+            }
+            if (isUpdated)
+            {
+                await _userManager.UpdateAsync(userApp);
+                return Ok(new
+                {
+                    Message = "Profile Is Updated Successfully",
+                    Token = GenerateToken(userApp),
+                    User = new
+                    {
+                        userApp.Id,
+                        userApp.Email,
+                        userApp.UserName,
+                        userApp.Address,
+                        userApp.MainImg,
+                        userApp.CoverImg,
+                    }
+                });
+            }
+            return NoContent();
+        }
 
         [HttpPut("ChangePassword")]
         [Authorize()]

@@ -9,6 +9,8 @@
             //    .Map(des => des.Description, src => src.Note);
             config.NewConfig<RegisterDTO, ApplicationUser>()
                 .Map(des => des.UserName, src => src.CompanyName);
+            //TypeAdapterConfig<ProfileRequest, ApplicationUser>.NewConfig()
+            //    .IgnoreNullValues(true);
             config.NewConfig<ApplicationUser,ProfileResponse>()
              .Map(des => des.CompanyName, src => src.UserName);
             //config.NewConfig<Cart, CartResponse>()

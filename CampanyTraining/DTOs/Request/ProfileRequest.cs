@@ -2,5 +2,12 @@
 {
     public class ProfileRequest
     {
+        public string? CompanyName { get; set; }
+
+        public string? Email { get; set; }
+        public string? Address { get; set; } 
+
+        public IFormFile? MainImgFile { get; set; }
+        public IFormFile? CoverImgFile { get; set; } 
     }
 }
