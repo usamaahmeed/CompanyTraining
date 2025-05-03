@@ -1,4 +1,4 @@
-using MapsterMapper;
+﻿using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,12 +27,8 @@ namespace CompanyTraining
             });
 
             // Add services to the container.
-
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
-            //builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
-            //    .AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -45,31 +41,49 @@ namespace CompanyTraining
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
-            // 3. Configure JWT Authentication 
+            // ✅ Prevent redirects to login page for API requests
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied = context =>
+                {
+                    context.Response.StatusCode = 403;
+                    return Task.CompletedTask;
+                };
+            });
+
+            // Configure JWT Authentication 
             var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>();
             builder.Services.AddSingleton<JwtOptions>(jwtOptions);
-            builder.Services.AddAuthentication()
-                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-                {
-                    options.SaveToken = true;
-                    options.TokenValidationParameters = new TokenValidationParameters
-                    {
-                        ValidateIssuer = true,
-                        ValidIssuer = jwtOptions.Issuer,
-                        ValidateAudience = true,
-                        ValidAudience = jwtOptions.Audience,
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-                    };
-                });
-
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+    .AddJwtBearer(options =>
+    {
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
 
             builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-
             var config = TypeAdapterConfig.GlobalSettings;
             config.Scan(Assembly.GetExecutingAssembly());
-
             builder.Services.AddSingleton<IMapper>(new Mapper(config));
 
             var app = builder.Build();
@@ -79,9 +93,9 @@ namespace CompanyTraining
             {
                 app.MapOpenApi();
                 app.MapScalarApiReference();
-
             }
-            // Call DbInitializer here:
+
+            // Initialize DB
             using (var scope = app.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -94,11 +108,9 @@ namespace CompanyTraining
                     Console.WriteLine($"Error seeding the database: {ex.Message}");
                 }
             }
+
             app.UseHttpsRedirection();
-            //app.MapIdentityApi<ApplicationUser>();
-
             app.UseCors(MyAllowSpecificOrigins);
-
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
