@@ -25,7 +25,7 @@ namespace CompanyTraining.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
+            modelBuilder.Entity("CompanyTraining.Models.ApplicationCompany", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -245,7 +245,7 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -254,7 +254,7 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -269,7 +269,7 @@ namespace CompanyTraining.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -278,7 +278,7 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

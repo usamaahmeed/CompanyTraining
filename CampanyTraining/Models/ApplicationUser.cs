@@ -4,10 +4,10 @@ namespace CompanyTraining.Models
 {
     public class ApplicationUser : IdentityUser
     {
-        public string? Address { get; set; }
+      public int ApplicationCompanyId { get; set; }
+      public ApplicationCompany ApplicationCompany { get; set; } = null!;
 
-        public string MainImg { get; set; } = string.Empty;
+      public IEnumerable<UserCourse> UserCourses { get; set; } = null!;
 
-        public string CoverImg {  get; set; }=string .Empty;
     }
 }

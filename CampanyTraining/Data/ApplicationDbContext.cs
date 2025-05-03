@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CompanyTraining.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationCompany>
     {
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
