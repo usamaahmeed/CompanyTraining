@@ -54,18 +54,30 @@ namespace CompanyTraining.Controllers
             var securityToken = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(securityToken);
         }
-
-        private async Task<string> SaveFileAsync(IFormFile file,string folderPath)
+        private async Task<string> SaveFileAsync(IFormFile file, string folderPath)
         {
-            var fileName = Guid.NewGuid().ToString()+Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(Directory.GetCurrentDirectory(), folderPath, fileName);
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", folderPath);
+
+            // Ensure the directory exists
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+            }
+
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var filePath = Path.Combine(directoryPath, fileName);
+
             using (var stream = System.IO.File.Create(filePath))
             {
                 await file.CopyToAsync(stream);
             }
-            return fileName;
+
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var imageUrl = $"{baseUrl}/{folderPath}/{fileName}";
+            return imageUrl; // Return the full URL
         }
-       
+
+
 
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
@@ -93,9 +105,12 @@ namespace CompanyTraining.Controllers
 
             return Ok(new
             {
-                Token = GenerateToken(applicationUser),
-                User = new
+
+                Message = "User Created Successfully",
+                Success = true,
+                Data = new
                 {
+                    Token = GenerateToken(applicationUser),
                     applicationUser.Id,
                     applicationUser.Email,
                     applicationUser.UserName,
@@ -120,9 +135,12 @@ namespace CompanyTraining.Controllers
 
             return Ok(new
             {
-                Token = GenerateToken(user),
-                User = new
+
+                Message = "Login Successfully",
+                Success = true,
+                Data = new
                 {
+                    Token = GenerateToken(user),
                     user.Id,
                     user.Email,
                     user.UserName,
@@ -172,14 +190,23 @@ namespace CompanyTraining.Controllers
         }
 
         [HttpGet("Profile")]
-        [Authorize()]
+        [Authorize]
         public async Task<IActionResult> GetProfileInfo()
         {
             var appUser = await _userManager.GetUserAsync(User);
-            if(appUser == null )
+            if (appUser == null)
                 return NotFound();
             var profile = appUser.Adapt<ProfileResponse>();
-            return Ok(profile);
+
+            return Ok(new
+            { 
+                Message = "Profile Loaded Successfully",
+                Success = true,
+                Data = profile,
+                
+            }
+
+           );
         }
 
         [HttpPut("EditProfile")]
@@ -238,8 +265,8 @@ namespace CompanyTraining.Controllers
                 return Ok(new
                 {
                     Message = "Profile Is Updated Successfully",
-                    Token = GenerateToken(userApp),
-                    User = new
+                    Success = true,
+                    Data = new
                     {
                         userApp.Id,
                         userApp.Email,
