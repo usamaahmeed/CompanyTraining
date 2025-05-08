@@ -18,12 +18,12 @@ namespace CompanyTraining.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationCompany> _userManager;
+        private readonly SignInManager<ApplicationCompany> _signInManager;
         private readonly JwtOptions _jwtOptions;
 
 
-        public AccountsController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, JwtOptions jwtOptions)
+        public AccountsController(UserManager<ApplicationCompany> userManager, SignInManager<ApplicationCompany> signInManager, JwtOptions jwtOptions)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
@@ -32,7 +32,7 @@ namespace CompanyTraining.Controllers
 
         private bool IsValidFile(IFormFile formFile) => (formFile != null && formFile.Length > 0);
 
-        private string GenerateToken(ApplicationUser user)
+        private string GenerateToken(ApplicationCompany user)
         {
             // إنشاء التوكن
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -82,9 +82,9 @@ namespace CompanyTraining.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
         {
-            ApplicationUser applicationUser = registerDTO.Adapt<ApplicationUser>();
+            ApplicationCompany ApplicationCompany = registerDTO.Adapt<ApplicationCompany>();
 
-            var result = await _userManager.CreateAsync(applicationUser, registerDTO.Password);
+            var result = await _userManager.CreateAsync(ApplicationCompany, registerDTO.Password);
 
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
@@ -94,14 +94,14 @@ namespace CompanyTraining.Controllers
                 var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
 
 
-                applicationUser.MainImg = mainImgFileName;
+                ApplicationCompany.MainImg = mainImgFileName;
 
-                applicationUser.CoverImg = coverImgFileName;
+                ApplicationCompany.CoverImg = coverImgFileName;
 
-                await _userManager.UpdateAsync(applicationUser);
+                await _userManager.UpdateAsync(ApplicationCompany);
             }
-            await _signInManager.SignInAsync(applicationUser, false);
-            await _userManager.AddToRoleAsync(applicationUser, "Company");
+            await _signInManager.SignInAsync(ApplicationCompany, false);
+            await _userManager.AddToRoleAsync(ApplicationCompany, "Company");
 
             return Ok(new
             {
@@ -110,13 +110,13 @@ namespace CompanyTraining.Controllers
                 Success = true,
                 Data = new
                 {
-                    Token = GenerateToken(applicationUser),
-                    applicationUser.Id,
-                    applicationUser.Email,
-                    applicationUser.UserName,
-                    applicationUser.Address,
-                    applicationUser.MainImg,
-                    applicationUser.CoverImg,
+                    Token = GenerateToken(ApplicationCompany),
+                    ApplicationCompany.Id,
+                    ApplicationCompany.Email,
+                    ApplicationCompany.UserName,
+                    ApplicationCompany.Address,
+                    ApplicationCompany.MainImg,
+                    ApplicationCompany.CoverImg,
                 }
             });
         }

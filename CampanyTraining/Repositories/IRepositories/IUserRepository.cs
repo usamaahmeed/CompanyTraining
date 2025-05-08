@@ -1,7 +1,7 @@
 ﻿
 namespace CompanyTraining.Repositories.IRepositories
 {
-    public interface IUserRepository : IRepository<ApplicationUser>
+    public interface IUserRepository : IRepository<ApplicationCompany>
     {
     }
 }

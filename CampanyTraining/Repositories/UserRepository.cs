@@ -1,6 +1,6 @@
 ﻿namespace CompanyTraining.Repositories
 {
-    public class UserRepository : Repository<ApplicationUser>, IUserRepository
+    public class UserRepository : Repository<ApplicationCompany>, IUserRepository
     {
         private readonly ApplicationDbContext dbContext;
 
