@@ -1,8 +1,11 @@
-﻿namespace CompanyTraining.Models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace CompanyTraining.Models
 {
+    [PrimaryKey(nameof(ApplicationUserId),nameof(CourseId))]
     public class UserCourse
     {
-        public string ApplicationUserId { get; set; } = null!;
+        public int ApplicationUserId { get; set; }
         public ApplicationUser ApplicationUser { get; set; } = null!;
         
         public int CourseId { get; set; }

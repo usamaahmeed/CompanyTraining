@@ -1,4 +1,6 @@
-﻿namespace CompanyTraining.Models
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace CompanyTraining.Models
 {
     public class Quiz
     {
@@ -10,7 +12,7 @@
         public Course Course { get; set; } = null!;
 
         public ICollection<Question> Questions { get; set; } = null!;
-        public ICollection<UserQuizAttempt> UserQuizzes { get; set; } =null!;
+        public ICollection<UserQuizAttempt> UserQuizAttempts { get; set; } =null!;
 
     }
 }

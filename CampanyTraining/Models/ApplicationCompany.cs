@@ -11,7 +11,6 @@ namespace CompanyTraining.Models
         public string CoverImg {  get; set; }=string .Empty;
 
         public IEnumerable<Subscribe> Subscribes { get; set; } = null!;
-        public IEnumerable<ApplicationCompany> ApplicationCompanies { get; set; } = null!;
 
         public IEnumerable<ApplicationUser> ApplicationUsers { get; set; } = null!;
     }

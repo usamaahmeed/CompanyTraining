@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.IdentityModel.Tokens;
+using Stripe.Checkout;
+using Stripe.Climate;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -20,20 +22,37 @@ namespace CompanyTraining.Controllers
     {
         private readonly UserManager<ApplicationCompany> _userManager;
         private readonly SignInManager<ApplicationCompany> _signInManager;
+        private readonly ApplicationDbContext _applicationDbContext;
         private readonly JwtOptions _jwtOptions;
+        private readonly ISubscribeRepository _subscribeRepository;
+        private readonly IPackageRepository _packageRepository;
 
-
-        public AccountsController(UserManager<ApplicationCompany> userManager, SignInManager<ApplicationCompany> signInManager, JwtOptions jwtOptions)
+        public AccountsController(UserManager<ApplicationCompany> userManager,
+            SignInManager<ApplicationCompany> signInManager,
+            ApplicationDbContext applicationDbContext,
+            JwtOptions jwtOptions, ISubscribeRepository subscribeRepository, IPackageRepository packageRepository)
         {
             this._userManager = userManager;
             this._signInManager = signInManager;
+            this._applicationDbContext = applicationDbContext;
             this._jwtOptions = jwtOptions;
+            this._subscribeRepository = subscribeRepository;
+            this._packageRepository = packageRepository;
         }
 
         private bool IsValidFile(IFormFile formFile) => (formFile != null && formFile.Length > 0);
 
-        private string GenerateToken(ApplicationCompany user)
+        private async Task<string> GenerateToken(ApplicationCompany user)
         {
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
+              {
+                   new Claim(ClaimTypes.NameIdentifier, user.Id),
+                   new Claim(ClaimTypes.Email, user.Email),
+              };
+            foreach (var role in userRoles) {
+                claims.Add(new Claim(ClaimTypes.Role,role));
+            }
             // إنشاء التوكن
             var tokenHandler = new JwtSecurityTokenHandler();
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -44,11 +63,7 @@ namespace CompanyTraining.Controllers
                     new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
                     SecurityAlgorithms.HmacSha256
                 ),
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                    new Claim(ClaimTypes.Email, user.Email)
-                }),
+                Subject = new ClaimsIdentity(claims)
             };
 
             var securityToken = tokenHandler.CreateToken(tokenDescriptor);
@@ -76,49 +91,181 @@ namespace CompanyTraining.Controllers
             var imageUrl = $"{baseUrl}/{folderPath}/{fileName}";
             return imageUrl; // Return the full URL
         }
+        private async Task<Session> CreateStripeSession(Package package)
+        {
+            var options = new SessionCreateOptions
+            {
+                PaymentMethodTypes = new List<string> { "card" },
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+                SuccessUrl = $"{Request.Scheme}://{Request.Host}/payment/Success",
+                CancelUrl = $"{Request.Scheme}://{Request.Host}/payment/Cancel",
+            };
 
+            options.LineItems.Add
+                (
+                   new SessionLineItemOptions()
+                   {
+                       PriceData = new SessionLineItemPriceDataOptions()
+                       {
+                           Currency = "egp",
+                           ProductData = new SessionLineItemPriceDataProductDataOptions
+                           {
+                               Description = package.Description,
+                               Name = package.Name,
+                           },
+                           UnitAmount = (long)package.Price * 100,
 
+                       },
+                       Quantity = 1
+                   }
+                );
+
+            var service = new SessionService();
+            return await service.CreateAsync(options);
+        }
 
         [HttpPost("Register")]
+        //public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
+        //{
+        //    ApplicationCompany ApplicationCompany = registerDTO.Adapt<ApplicationCompany>();
+
+        //    var package = _packageRepository.GetOne(expression: e => e.Id == registerDTO.PackageId);
+        //    var result = await _userManager.CreateAsync(ApplicationCompany, registerDTO.Password);
+
+        //    if (!result.Succeeded || package == null)
+        //        return BadRequest(result.Errors);
+        //    if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
+        //    {
+        //        var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "images/company/mainimgs");
+        //        var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
+
+
+        //        ApplicationCompany.MainImg = mainImgFileName;
+
+        //        ApplicationCompany.CoverImg = coverImgFileName;
+
+        //        await _userManager.UpdateAsync(ApplicationCompany);
+        //    }
+
+        //    var options = new SessionCreateOptions
+        //    {
+        //        PaymentMethodTypes = new List<string> { "card" },
+        //        LineItems = new List<SessionLineItemOptions>(),
+        //        Mode = "payment",
+        //    };
+
+
+
+        //    var subscribe = new Subscribe
+        //    {
+        //        ApplicationCompanyId = ApplicationCompany.Id,
+        //        PackageId = package.Id,
+        //        SubscriptionStartDate = DateTime.UtcNow,
+        //        SubscriptionEndDate = DateTime.Today.AddDays(package.DurationDay),
+        //    };
+
+        //    options.LineItems.Add
+        //        (
+        //           new SessionLineItemOptions()
+        //           {
+        //               PriceData = new SessionLineItemPriceDataOptions()
+        //               {
+        //                   Currency = "egp",
+        //                   ProductData = new SessionLineItemPriceDataProductDataOptions
+        //                   {
+        //                       Description = package.Description,
+        //                       Name = package.Name,
+        //                   },
+        //                   UnitAmount = (long) package.Price * 100
+        //               },
+        //           }
+        //        );
+
+        //    var service = new SessionService();
+        //    var session = service.Create(options);
+        //    subscribe.SessionId = session.Id;
+
+        //    await _signInManager.SignInAsync(ApplicationCompany, false);
+        //    await _userManager.AddToRoleAsync(ApplicationCompany, "Company");
+
+        //    return Ok(new
+        //    {
+
+        //        Message = "User Created Successfully",
+        //        Success = true,
+        //        Data = new
+        //        {
+        //            Token = GenerateToken(ApplicationCompany),
+        //            ApplicationCompany.Id,
+        //            ApplicationCompany.Email,
+        //            ApplicationCompany.UserName,
+        //            ApplicationCompany.Address,
+        //            ApplicationCompany.MainImg,
+        //            ApplicationCompany.CoverImg,
+        //        }
+        //    });
+        //}
         public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
         {
             ApplicationCompany ApplicationCompany = registerDTO.Adapt<ApplicationCompany>();
 
+            var package = _packageRepository.GetOne(expression: e => e.Id == registerDTO.PackageId);
             var result = await _userManager.CreateAsync(ApplicationCompany, registerDTO.Password);
-
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
-            if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
+            using var transaction = _applicationDbContext.Database.BeginTransaction();
+            try
             {
-                var mainImgFileName =await SaveFileAsync(registerDTO.MainImgFile, "images/company/mainimgs");
-                var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
-
-
-                ApplicationCompany.MainImg = mainImgFileName;
-
-                ApplicationCompany.CoverImg = coverImgFileName;
-
-                await _userManager.UpdateAsync(ApplicationCompany);
-            }
-            await _signInManager.SignInAsync(ApplicationCompany, false);
-            await _userManager.AddToRoleAsync(ApplicationCompany, "Company");
-
-            return Ok(new
-            {
-
-                Message = "User Created Successfully",
-                Success = true,
-                Data = new
+                if (!result.Succeeded || package == null)
+                    return BadRequest(result.Errors);
+                if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
                 {
-                    Token = GenerateToken(ApplicationCompany),
-                    ApplicationCompany.Id,
-                    ApplicationCompany.Email,
-                    ApplicationCompany.UserName,
-                    ApplicationCompany.Address,
-                    ApplicationCompany.MainImg,
-                    ApplicationCompany.CoverImg,
+                    var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "images/company/mainimgs");
+                    var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
+
+
+                    ApplicationCompany.MainImg = mainImgFileName;
+
+                    ApplicationCompany.CoverImg = coverImgFileName;
+
+                    await _userManager.UpdateAsync(ApplicationCompany);
                 }
-            });
+
+                var subscribe = new Subscribe
+                {
+                    ApplicationCompanyId = ApplicationCompany.Id,
+                    PackageId = package.Id,
+                    SubscriptionStartDate = DateTime.UtcNow,
+                    SubscriptionEndDate = DateTime.Today.AddDays(package.DurationDay),
+                };
+                var session = await CreateStripeSession(package);
+                subscribe.SessionId = session.Id;
+                await _subscribeRepository.CreateAsync(subscribe);
+                await _subscribeRepository.CommitAsync();
+                await _signInManager.SignInAsync(ApplicationCompany, false);
+                await _userManager.AddToRoleAsync(ApplicationCompany, "Company");
+                await  transaction.CommitAsync();
+                return Ok(new
+                {
+
+                    Message = "User Created Successfully",
+                    Success = true,
+                    Data = new
+                    {
+                        Token = await GenerateToken(ApplicationCompany),
+                        ApplicationCompany.Id,
+                        ApplicationCompany.Email,
+                        ApplicationCompany.UserName,
+                        ApplicationCompany.Address,
+                        ApplicationCompany.MainImg,
+                        ApplicationCompany.CoverImg,
+                    },
+                    session.Url
+                });
+            }catch(Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("Login")]
@@ -176,7 +323,7 @@ namespace CompanyTraining.Controllers
 
         //    return NotFound();
 
-        
+
 
 
         [HttpGet("Logout")]
@@ -199,11 +346,11 @@ namespace CompanyTraining.Controllers
             var profile = appUser.Adapt<ProfileResponse>();
 
             return Ok(new
-            { 
+            {
                 Message = "Profile Loaded Successfully",
                 Success = true,
                 Data = profile,
-                
+
             }
 
            );
@@ -215,8 +362,8 @@ namespace CompanyTraining.Controllers
             bool isUpdated = false;
             var userApp = await _userManager.GetUserAsync(User);
             if (userApp == null)
-                return NotFound(); 
-              if(profileRequest.CompanyName != null)
+                return NotFound();
+            if (profileRequest.CompanyName != null)
             {
                 userApp.UserName = profileRequest.CompanyName;
                 isUpdated = true;
@@ -234,7 +381,7 @@ namespace CompanyTraining.Controllers
             }
             if (IsValidFile(profileRequest.MainImgFile))
             {
-                if(!string.IsNullOrEmpty(userApp.MainImg))
+                if (!string.IsNullOrEmpty(userApp.MainImg))
                 {
                     var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "images/company/mainimgs", userApp.MainImg);
                     if (System.IO.File.Exists(oldPath))

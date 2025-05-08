@@ -1,5 +1,8 @@
-﻿namespace CompanyTraining.Models
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace CompanyTraining.Models
 {
+    [PrimaryKey(nameof(QuestionId),nameof(UserQuizAttemptId))]
     public class UserAnswer
     {
 
