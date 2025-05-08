@@ -98,6 +98,352 @@ namespace CompanyTraining.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationCompanyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationCompanyId");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.ToTable("ApplicationUser");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApplicationCompanyId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationCompanyId");
+
+                    b.ToTable("Category");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Certificate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserCourseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Certificate");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Course", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QuizId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("Course");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Lesson", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ModuleId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoNmae")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isCompleted")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModuleId");
+
+                    b.ToTable("Lesson");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Module", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("Module");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Package", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DurationDay")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Package");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Question", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CorrectAnswer")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("Mark")
+                        .HasColumnType("float");
+
+                    b.Property<string>("QuestionHeader")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("QuizId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("QuizId");
+
+                    b.ToTable("Question");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Quiz", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isPass")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId")
+                        .IsUnique();
+
+                    b.ToTable("Quiz");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Subscribe", b =>
+                {
+                    b.Property<string>("SessionId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ApplicationCompanyId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("PackageId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("SubscriptionEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SubscriptionStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("SessionId", "ApplicationCompanyId");
+
+                    b.HasIndex("ApplicationCompanyId");
+
+                    b.HasIndex("PackageId");
+
+                    b.ToTable("Subscribe");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserAnswer", b =>
+                {
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserQuizAttemptId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCorrect")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("SelectedAnswer")
+                        .HasColumnType("bit");
+
+                    b.HasKey("QuestionId", "UserQuizAttemptId");
+
+                    b.HasIndex("UserQuizAttemptId");
+
+                    b.ToTable("UserAnswer");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserCourse", b =>
+                {
+                    b.Property<int>("ApplicationUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CourseId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CertificateId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsCompleted")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("Progress")
+                        .HasColumnType("float");
+
+                    b.HasKey("ApplicationUserId", "CourseId");
+
+                    b.HasIndex("CertificateId")
+                        .IsUnique()
+                        .HasFilter("[CertificateId] IS NOT NULL");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("UserCourse");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserQuizAttempt", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ApplicationUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuizId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TotalQuestions")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("isPass")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
+
+                    b.HasIndex("QuizId");
+
+                    b.ToTable("UserQuizAttempt");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -231,6 +577,165 @@ namespace CompanyTraining.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", "ApplicationCompany")
+                        .WithMany("ApplicationUsers")
+                        .HasForeignKey("ApplicationCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationCompany");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Category", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", "ApplicationCompany")
+                        .WithMany()
+                        .HasForeignKey("ApplicationCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationCompany");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Course", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.Category", "Category")
+                        .WithMany("Courses")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Lesson", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.Module", "Module")
+                        .WithMany("Lessons")
+                        .HasForeignKey("ModuleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Module");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Module", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.Course", "Course")
+                        .WithMany("Modules")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Question", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.Quiz", "Quiz")
+                        .WithMany("Questions")
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Quiz", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.Course", "Course")
+                        .WithOne("Quiz")
+                        .HasForeignKey("CompanyTraining.Models.Quiz", "CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Subscribe", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.ApplicationCompany", "ApplicationCompany")
+                        .WithMany("Subscribes")
+                        .HasForeignKey("ApplicationCompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CompanyTraining.Models.Package", "Package")
+                        .WithMany("Subscribes")
+                        .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationCompany");
+
+                    b.Navigation("Package");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserAnswer", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.Question", "Question")
+                        .WithMany("UserAnswers")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CompanyTraining.Models.UserQuizAttempt", "UserQuizAttempt")
+                        .WithMany("UserAnswers")
+                        .HasForeignKey("UserQuizAttemptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+
+                    b.Navigation("UserQuizAttempt");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserCourse", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("UserCourses")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("CompanyTraining.Models.Certificate", "Certificate")
+                        .WithOne("UserCourse")
+                        .HasForeignKey("CompanyTraining.Models.UserCourse", "CertificateId");
+
+                    b.HasOne("CompanyTraining.Models.Course", "Course")
+                        .WithMany("UserCourses")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Certificate");
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserQuizAttempt", b =>
+                {
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", "ApplicationUser")
+                        .WithMany("UserQuizAttempts")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("CompanyTraining.Models.Quiz", "Quiz")
+                        .WithMany("UserQuizAttempts")
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("ApplicationUser");
+
+                    b.Navigation("Quiz");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -280,6 +785,68 @@ namespace CompanyTraining.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.ApplicationCompany", b =>
+                {
+                    b.Navigation("ApplicationUsers");
+
+                    b.Navigation("Subscribes");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("UserCourses");
+
+                    b.Navigation("UserQuizAttempts");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Category", b =>
+                {
+                    b.Navigation("Courses");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Certificate", b =>
+                {
+                    b.Navigation("UserCourse")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Course", b =>
+                {
+                    b.Navigation("Modules");
+
+                    b.Navigation("Quiz")
+                        .IsRequired();
+
+                    b.Navigation("UserCourses");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Module", b =>
+                {
+                    b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Package", b =>
+                {
+                    b.Navigation("Subscribes");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Question", b =>
+                {
+                    b.Navigation("UserAnswers");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Quiz", b =>
+                {
+                    b.Navigation("Questions");
+
+                    b.Navigation("UserQuizAttempts");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.UserQuizAttempt", b =>
+                {
+                    b.Navigation("UserAnswers");
                 });
 #pragma warning restore 612, 618
         }

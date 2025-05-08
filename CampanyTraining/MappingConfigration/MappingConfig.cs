@@ -13,6 +13,12 @@
             //    .IgnoreNullValues(true);
             config.NewConfig<ApplicationCompany,ProfileResponse>()
              .Map(des => des.CompanyName, src => src.UserName);
+
+            config.NewConfig<Subscribe, CompanyResponse>()
+                   .Map(des => des.PackageName, src => src.Package.Name)
+                   .Map(des => des.UserName ,src=>src.ApplicationCompany.UserName);
+
+
             //config.NewConfig<Cart, CartResponse>()
             //    .Map(dest => dest, src => src.Product)
             //    .Map(dest => dest.Count, src => src.Count);
