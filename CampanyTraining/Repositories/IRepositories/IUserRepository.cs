@@ -1,8 +1,8 @@
 ﻿
 namespace CompanyTraining.Repositories.IRepositories
 {
-    public interface IUserRepository : IRepository<ApplicationCompany>
+    public interface IUserRepository : IRepository<ApplicationUser>
     {
-        public IQueryable<ApplicationCompany> GetCompaniesWithPackages();
+        public IQueryable<ApplicationUser> GetCompaniesWithPackages();
     }
 }

@@ -4,9 +4,9 @@ using System.Reflection.Emit;
 
 namespace CompanyTraining.Data
 {
-    public class ApplicationDbContext : IdentityDbContext<ApplicationCompany>
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        public DbSet<ApplicationCompany> ApplicationCompanies { get; set; }
+        public DbSet<ApplicationUser> ApplicationCompanies { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -16,11 +16,17 @@ namespace CompanyTraining.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<ApplicationUser>().HasIndex(e => new { e.Email }).IsUnique();
+            //builder.Entity<ApplicationUser>().HasIndex(e => new { e.Email }).IsUnique();
             builder.Entity<Course>().HasOne(e => e.Quiz).WithOne(u => u.Course).HasForeignKey<Quiz>(e => e.CourseId);
             builder.Entity<Certificate>().HasOne(e => e.UserCourse).WithOne(e => e.Certificate).HasForeignKey<UserCourse>(e => e.CertificateId);
-          
-            builder.Entity<UserCourse>()
+
+			builder.Entity<ApplicationUser>()
+				.HasMany(u => u.Employees)
+				.WithOne(u => u.Company)
+				.HasForeignKey(u => u.CompanyId)
+				.OnDelete(DeleteBehavior.Restrict);
+
+			builder.Entity<UserCourse>()
     .HasOne(uc => uc.Course)
     .WithMany(c => c.UserCourses)
     .HasForeignKey(uc => uc.CourseId)

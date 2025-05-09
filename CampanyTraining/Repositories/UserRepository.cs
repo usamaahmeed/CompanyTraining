@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CompanyTraining.Repositories
 {
-    public class UserRepository : Repository<ApplicationCompany>, IUserRepository
+    public class UserRepository : Repository<ApplicationUser>, IUserRepository
     {
         private readonly ApplicationDbContext _dbContext;
 
@@ -11,7 +11,7 @@ namespace CompanyTraining.Repositories
         {
             this._dbContext = dbContext;
         }
-        public IQueryable<ApplicationCompany> GetCompaniesWithPackages()
+        public IQueryable<ApplicationUser> GetCompaniesWithPackages()
         {
             var companies = _dbContext.ApplicationCompanies.Include(e => e.Subscribes).ThenInclude(e=>e.Package);
             return companies;

@@ -10,7 +10,7 @@ using System.Text;
 
 namespace CompanyTraining
 {
-    public class Program
+   public class Program
     {
         public static async Task Main(string[] args)
         {
@@ -34,7 +34,7 @@ namespace CompanyTraining
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddIdentity<ApplicationCompany, IdentityRole>(options =>
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedEmail = false;
                 options.SignIn.RequireConfirmedPhoneNumber = false;
@@ -114,14 +114,12 @@ namespace CompanyTraining
                     Console.WriteLine($"Error seeding the database: {ex.Message}");
                 }
             }
-
             app.UseHttpsRedirection();
             app.UseCors(MyAllowSpecificOrigins);
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
-
             app.Run();
         }
     }

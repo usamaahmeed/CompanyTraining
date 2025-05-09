@@ -2,17 +2,17 @@
 
 namespace CompanyTraining.Models
 {
-    public class ApplicationUser
+
+    public class ApplicationUser : IdentityUser
     {
-
-      public int Id { get; set; }
-      public string Email { get; set; }=string.Empty;
-      public string Password { get; set; }=string.Empty;
-      public string ApplicationCompanyId { get; set; } = string.Empty;
-      public ApplicationCompany ApplicationCompany { get; set; } = null!;
-      public IEnumerable<UserCourse> UserCourses { get; set; } = null!;
-
-      public IEnumerable<UserQuizAttempt> UserQuizAttempts { get; set; } = null!;
-
+        public string? Address { get; set; }
+        public string? MainImg { get; set; }
+        public string? CoverImg {  get; set; }
+        public string? CompanyId { get; set; }
+        public ApplicationUser? Company { get; set; } 
+        public IEnumerable<Subscribe> Subscribes { get; set; } = null!;
+        public IEnumerable<ApplicationUser> Employees { get; set; } = new List<ApplicationUser>();
+        public IEnumerable<UserCourse> UserCourses { get; set; } = null!;
+        public IEnumerable<UserQuizAttempt> UserQuizAttempts { get; set; } = null!;
     }
 }

@@ -5,10 +5,10 @@ namespace CompanyTraining.Data
 {
     public class DbInitializer
     {
-        private readonly UserManager<ApplicationCompany> userManager;
+        private readonly UserManager<ApplicationUser> userManager;
         private readonly RoleManager<IdentityRole> identityRole;
 
-        public DbInitializer(UserManager<ApplicationCompany> userManager, RoleManager<IdentityRole> identityRole)
+        public DbInitializer(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> identityRole)
         {
             this.userManager = userManager;
             this.identityRole = identityRole;
@@ -25,7 +25,7 @@ namespace CompanyTraining.Data
             var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
             // Get UserManager to create and manage users of type ApplicationCompany
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationCompany>>();
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             // Apply any pending migrations to the database
             await context.Database.MigrateAsync();
@@ -50,7 +50,7 @@ namespace CompanyTraining.Data
             if (await userManager.FindByEmailAsync(adminEmail) == null)
             {
                 // Create a new ApplicationCompany object
-                var adminUser = new ApplicationCompany
+                var adminUser = new ApplicationUser
                 {
                     UserName = adminEmail,
                     Email = adminEmail,

@@ -1,4 +1,5 @@
 ﻿
+using CompanyTraining.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,15 @@ namespace CompanyTraining.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly UserManager<ApplicationCompany> _userManager;
-        private readonly SignInManager<ApplicationCompany> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ApplicationDbContext _applicationDbContext;
         private readonly JwtOptions _jwtOptions;
         private readonly ISubscribeRepository _subscribeRepository;
         private readonly IPackageRepository _packageRepository;
 
-        public AccountsController(UserManager<ApplicationCompany> userManager,
-            SignInManager<ApplicationCompany> signInManager,
+        public AccountsController(UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
             ApplicationDbContext applicationDbContext,
             JwtOptions jwtOptions, ISubscribeRepository subscribeRepository, IPackageRepository packageRepository)
         {
@@ -37,7 +38,7 @@ namespace CompanyTraining.Controllers
 
         private bool IsValidFile(IFormFile formFile) => (formFile != null && formFile.Length > 0);
 
-        private async Task<string> GenerateToken(ApplicationCompany user)
+        private async Task<string> GenerateToken(ApplicationUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
@@ -127,78 +128,112 @@ namespace CompanyTraining.Controllers
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
         {
-            //var allowedRoles = new List<string> { "Admin", "Company", "User" };
-            //if (!allowedRoles.Contains(registerDTO.Role))
-            //{
-            //    return BadRequest("Invalid role selected.");
-            //}
-
-            ApplicationCompany ApplicationCompany = registerDTO.Adapt<ApplicationCompany>();
-
-            var package = _packageRepository.GetOne(expression: e => e.Id == registerDTO.PackageId);
-            var result = await _userManager.CreateAsync(ApplicationCompany, registerDTO.Password);
-
-            using var transaction = _applicationDbContext.Database.BeginTransaction();
-            try
+            var allowedRoles = new List<string> { "Company", "User" };
+            if (!allowedRoles.Contains(registerDTO.Role))
             {
-                if (!result.Succeeded || package == null)
-                    return BadRequest(result.Errors);
+                return BadRequest("Invalid role selected.");
+            }
+            else
+            {
+                ApplicationUser ApplicationUser = registerDTO.Adapt<ApplicationUser>();
 
-                if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
+                if (registerDTO.Role == "User")
                 {
-                    var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
-                    var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "Images/company/coverimgs");
-
-                    ApplicationCompany.MainImg = mainImgFileName;
-                    ApplicationCompany.CoverImg = coverImgFileName;
-
-                    await _userManager.UpdateAsync(ApplicationCompany);
-                }
-
-                await _userManager.AddToRoleAsync(ApplicationCompany, registerDTO.Role);
-
-                var subscribe = new Subscribe
-                {
-                    ApplicationCompanyId = ApplicationCompany.Id,
-                    PackageId = package.Id,
-                    SubscriptionStartDate = DateTime.UtcNow,
-                    SubscriptionEndDate = DateTime.Today.AddDays(package.DurationDay),
-                };
-
-                var session = await CreateStripeSession(package);
-                subscribe.SessionId = session.Id;
-                await _subscribeRepository.CreateAsync(subscribe);
-                await _subscribeRepository.CommitAsync();
-
-                await _signInManager.SignInAsync(ApplicationCompany, false);
-
-                await transaction.CommitAsync();
-
-                return Ok(new
-                {
-                    Message = "User Created Successfully",
-                    Success = true,
-                    Data = new
+                    var result = await _userManager.CreateAsync(ApplicationUser, registerDTO.Password);
+                    if (!result.Succeeded)
+                        return BadRequest(result.Errors);
+                    if (IsValidFile(registerDTO.MainImgFile))
                     {
-                        Token = await GenerateToken(ApplicationCompany),
-                        ApplicationCompany.Id,
-                        ApplicationCompany.Email,
-                        ApplicationCompany.UserName,
-                        ApplicationCompany.Address,
-                        ApplicationCompany.MainImg,
-                        ApplicationCompany.CoverImg,
-                        Role = registerDTO.Role
-                    },
-                    session.Url
-                });
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                return BadRequest(ex.Message);
-            }
-        }
+                        var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
+                        ApplicationUser.MainImg = mainImgFileName;
+                        await _userManager.UpdateAsync(ApplicationUser);
+                    }
+                    await _userManager.AddToRoleAsync(ApplicationUser, "User");
+                    var roles = await _userManager.GetRolesAsync(ApplicationUser);
+                    var role = roles.FirstOrDefault();
+                    return Ok(new
+                    {
+                        Message = "User Created Successfully",
+                        Success = true,
+                        Data = new
+                        {
+                            Token = await GenerateToken(ApplicationUser),
+                            ApplicationUser.Id,
+                            ApplicationUser.Email,
+                            ApplicationUser.UserName,
+                            ApplicationUser.Address,
+                            ApplicationUser.MainImg,
+                            Role = role,
+                        },
+                    });
+                }
+                using var transaction = _applicationDbContext.Database.BeginTransaction();
+                try
+                {
+                    var package = _packageRepository.GetOne(expression: e => e.Id == registerDTO.PackageId);
+                    var result = await _userManager.CreateAsync(ApplicationUser, registerDTO.Password);
+                    if (!result.Succeeded || package == null)
+                        return BadRequest(result.Errors);
+                    if (IsValidFile(registerDTO.MainImgFile) || IsValidFile(registerDTO.CoverImgFile))
+                    {
+                        var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
+                        var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "Images/company/coverimgs");
 
+                        ApplicationUser.MainImg = mainImgFileName;
+                        ApplicationUser.CoverImg = coverImgFileName;
+
+                        await _userManager.UpdateAsync(ApplicationUser);
+                    }
+
+                    await _userManager.AddToRoleAsync(ApplicationUser, "Company");
+
+                    var subscribe = new Subscribe
+                    {
+                        ApplicationUserId = ApplicationUser.Id,
+                        PackageId = package.Id,
+                        SubscriptionStartDate = DateTime.UtcNow,
+                        SubscriptionEndDate = DateTime.Today.AddDays(package.DurationDay),
+                    };
+
+                    var session = await CreateStripeSession(package);
+                    subscribe.SessionId = session.Id;
+                    await _subscribeRepository.CreateAsync(subscribe);
+                    await _subscribeRepository.CommitAsync();
+
+                    await _signInManager.SignInAsync(ApplicationUser, false);
+                    var roles = await _userManager.GetRolesAsync(ApplicationUser);
+                    var role = roles.FirstOrDefault();
+
+                    await transaction.CommitAsync();
+
+                    return Ok(new
+                    {
+                        Message = "Company Created Successfully",
+                        Success = true,
+                        Data = new
+                        {
+                            Token = await GenerateToken(ApplicationUser),
+                            ApplicationUser.Id,
+                            ApplicationUser.Email,
+                            ApplicationUser.UserName,
+                            ApplicationUser.Address,
+                            ApplicationUser.MainImg,
+                            ApplicationUser.CoverImg,
+                            Role = role,
+                            Stripe = session.Url
+                        },
+                    });
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest(ex.Message);
+                }
+            }
+
+            
+       }           
+        
 
         //[HttpPost("Login")]
         //public async Task<IActionResult> Login([FromBody] LoginDTO loginRequestDto)
