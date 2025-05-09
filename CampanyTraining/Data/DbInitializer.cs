@@ -31,7 +31,7 @@ namespace CompanyTraining.Data
             await context.Database.MigrateAsync();
 
             // List of default roles we want to ensure exist
-            var roles = new[] { "SuperAdmin", "Admin", "Company", "User" };
+            var roles = new[] {"Admin", "Company", "User" };
 
             // Check if each role exists; if not, create it
             foreach (var role in roles)
@@ -63,7 +63,7 @@ namespace CompanyTraining.Data
                 // If creation is successful, assign the user to the Admin role
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(adminUser, "SuperAdmin");
+                    await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
                 else
                 {
