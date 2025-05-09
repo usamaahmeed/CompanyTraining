@@ -5,7 +5,7 @@ namespace CompanyTraining.Models
     [PrimaryKey(nameof(ApplicationUserId),nameof(CourseId))]
     public class UserCourse
     {
-        public int ApplicationUserId { get; set; }
+        public string ApplicationUserId { get; set; } = null!;
         public ApplicationUser ApplicationUser { get; set; } = null!;
         
         public int CourseId { get; set; }

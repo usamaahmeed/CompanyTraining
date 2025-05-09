@@ -7,11 +7,11 @@
             //config.NewConfig<CategoryRequest, Category>()
             //    .Map(des => des.Name, src => src.CategoryName)
             //    .Map(des => des.Description, src => src.Note);
-            config.NewConfig<RegisterDTO, ApplicationCompany>()
-                .Map(des => des.UserName, src => src.CompanyName);
+            //config.NewConfig<RegisterDTO, ApplicationUser>()
+            //    .Map(des => des.UserName, src => src.CompanyName);
             //TypeAdapterConfig<ProfileRequest, ApplicationCompany>.NewConfig()
             //    .IgnoreNullValues(true);
-            config.NewConfig<ApplicationCompany,ProfileResponse>()
+            config.NewConfig<ApplicationUser, ProfileResponse>()
              .Map(des => des.CompanyName, src => src.UserName);
 
             config.NewConfig<Subscribe, CompanyResponse>()

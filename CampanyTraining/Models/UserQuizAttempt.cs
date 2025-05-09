@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
 
-        public int ApplicationUserId { get; set; }
+        public string ApplicationUserId { get; set; } = null!;
         public ApplicationUser ApplicationUser { get; set; } = null!;
 
         public int QuizId { get; set; }

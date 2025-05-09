@@ -1,29 +1,4 @@
-﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "profiles": {
-    "http": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "launchUrl": "scalar/v1",
-      "applicationUrl": "http://192.168.1.5:5062",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    },
-    "https": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "launchUrl": "scalar/v1",
-      "applicationUrl": "https://192.168.1.5:7090;http://192.168.1.5:5062",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
-    }
-  }
-}
-//{
+﻿//{
 //  "$schema": "https://json.schemastore.org/launchsettings.json",
 //  "profiles": {
 //    "http": {
@@ -31,7 +6,7 @@
 //      "dotnetRunMessages": true,
 //      "launchBrowser": true,
 //      "launchUrl": "scalar/v1",
-//      "applicationUrl": "http://localhost:5062",
+//      "applicationUrl": "http://192.168.1.5:5062",
 //      "environmentVariables": {
 //        "ASPNETCORE_ENVIRONMENT": "Development"
 //      }
@@ -41,10 +16,35 @@
 //      "dotnetRunMessages": true,
 //      "launchBrowser": true,
 //      "launchUrl": "scalar/v1",
-//      "applicationUrl": "https://localhost:7090;http://localhost:5062",
+//      "applicationUrl": "https://192.168.1.5:7090;http://192.168.1.5:5062",
 //      "environmentVariables": {
 //        "ASPNETCORE_ENVIRONMENT": "Development"
 //      }
 //    }
 //  }
 //}
+{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "scalar/v1",
+      "applicationUrl": "http://localhost:5062",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+     }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "scalar/v1",
+      "applicationUrl": "https://localhost:7090;http://localhost:5062",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
