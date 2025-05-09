@@ -1,18 +1,13 @@
-﻿using CompanyTraining.DTOs.Request;
-using CompanyTraining.Models;
-using CompanyTraining.Utility;
+﻿
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.IdentityModel.Tokens;
 using Stripe.Checkout;
-using Stripe.Climate;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
+
 
 namespace CompanyTraining.Controllers
 {
@@ -69,9 +64,11 @@ namespace CompanyTraining.Controllers
             var securityToken = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(securityToken);
         }
+
+
         private async Task<string> SaveFileAsync(IFormFile file, string folderPath)
         {
-            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", folderPath);
+            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), folderPath);
 
             // Ensure the directory exists
             if (!Directory.Exists(directoryPath))
@@ -91,6 +88,8 @@ namespace CompanyTraining.Controllers
             var imageUrl = $"{baseUrl}/{folderPath}/{fileName}";
             return imageUrl; // Return the full URL
         }
+
+
         private async Task<Session> CreateStripeSession(Package package)
         {
             var options = new SessionCreateOptions
@@ -126,109 +125,37 @@ namespace CompanyTraining.Controllers
         }
 
         [HttpPost("Register")]
-        //public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
-        //{
-        //    ApplicationCompany ApplicationCompany = registerDTO.Adapt<ApplicationCompany>();
-
-        //    var package = _packageRepository.GetOne(expression: e => e.Id == registerDTO.PackageId);
-        //    var result = await _userManager.CreateAsync(ApplicationCompany, registerDTO.Password);
-
-        //    if (!result.Succeeded || package == null)
-        //        return BadRequest(result.Errors);
-        //    if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
-        //    {
-        //        var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "images/company/mainimgs");
-        //        var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
-
-
-        //        ApplicationCompany.MainImg = mainImgFileName;
-
-        //        ApplicationCompany.CoverImg = coverImgFileName;
-
-        //        await _userManager.UpdateAsync(ApplicationCompany);
-        //    }
-
-        //    var options = new SessionCreateOptions
-        //    {
-        //        PaymentMethodTypes = new List<string> { "card" },
-        //        LineItems = new List<SessionLineItemOptions>(),
-        //        Mode = "payment",
-        //    };
-
-
-
-        //    var subscribe = new Subscribe
-        //    {
-        //        ApplicationCompanyId = ApplicationCompany.Id,
-        //        PackageId = package.Id,
-        //        SubscriptionStartDate = DateTime.UtcNow,
-        //        SubscriptionEndDate = DateTime.Today.AddDays(package.DurationDay),
-        //    };
-
-        //    options.LineItems.Add
-        //        (
-        //           new SessionLineItemOptions()
-        //           {
-        //               PriceData = new SessionLineItemPriceDataOptions()
-        //               {
-        //                   Currency = "egp",
-        //                   ProductData = new SessionLineItemPriceDataProductDataOptions
-        //                   {
-        //                       Description = package.Description,
-        //                       Name = package.Name,
-        //                   },
-        //                   UnitAmount = (long) package.Price * 100
-        //               },
-        //           }
-        //        );
-
-        //    var service = new SessionService();
-        //    var session = service.Create(options);
-        //    subscribe.SessionId = session.Id;
-
-        //    await _signInManager.SignInAsync(ApplicationCompany, false);
-        //    await _userManager.AddToRoleAsync(ApplicationCompany, "Company");
-
-        //    return Ok(new
-        //    {
-
-        //        Message = "User Created Successfully",
-        //        Success = true,
-        //        Data = new
-        //        {
-        //            Token = GenerateToken(ApplicationCompany),
-        //            ApplicationCompany.Id,
-        //            ApplicationCompany.Email,
-        //            ApplicationCompany.UserName,
-        //            ApplicationCompany.Address,
-        //            ApplicationCompany.MainImg,
-        //            ApplicationCompany.CoverImg,
-        //        }
-        //    });
-        //}
         public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
         {
+            //var allowedRoles = new List<string> { "Admin", "Company", "User" };
+            //if (!allowedRoles.Contains(registerDTO.Role))
+            //{
+            //    return BadRequest("Invalid role selected.");
+            //}
+
             ApplicationCompany ApplicationCompany = registerDTO.Adapt<ApplicationCompany>();
 
             var package = _packageRepository.GetOne(expression: e => e.Id == registerDTO.PackageId);
             var result = await _userManager.CreateAsync(ApplicationCompany, registerDTO.Password);
+
             using var transaction = _applicationDbContext.Database.BeginTransaction();
             try
             {
                 if (!result.Succeeded || package == null)
                     return BadRequest(result.Errors);
+
                 if (IsValidFile(registerDTO.MainImgFile) && IsValidFile(registerDTO.CoverImgFile))
                 {
-                    var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "images/company/mainimgs");
-                    var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "images/company/coverimgs");
-
+                    var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
+                    var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "Images/company/coverimgs");
 
                     ApplicationCompany.MainImg = mainImgFileName;
-
                     ApplicationCompany.CoverImg = coverImgFileName;
 
                     await _userManager.UpdateAsync(ApplicationCompany);
                 }
+
+                await _userManager.AddToRoleAsync(ApplicationCompany, registerDTO.Role);
 
                 var subscribe = new Subscribe
                 {
@@ -237,16 +164,18 @@ namespace CompanyTraining.Controllers
                     SubscriptionStartDate = DateTime.UtcNow,
                     SubscriptionEndDate = DateTime.Today.AddDays(package.DurationDay),
                 };
+
                 var session = await CreateStripeSession(package);
                 subscribe.SessionId = session.Id;
                 await _subscribeRepository.CreateAsync(subscribe);
                 await _subscribeRepository.CommitAsync();
+
                 await _signInManager.SignInAsync(ApplicationCompany, false);
-                await _userManager.AddToRoleAsync(ApplicationCompany, "Company");
-                await  transaction.CommitAsync();
+
+                await transaction.CommitAsync();
+
                 return Ok(new
                 {
-
                     Message = "User Created Successfully",
                     Success = true,
                     Data = new
@@ -258,18 +187,51 @@ namespace CompanyTraining.Controllers
                         ApplicationCompany.Address,
                         ApplicationCompany.MainImg,
                         ApplicationCompany.CoverImg,
+                        Role = registerDTO.Role
                     },
                     session.Url
                 });
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
                 return BadRequest(ex.Message);
             }
         }
 
-        [HttpPost("Login")]
-        public async Task<IActionResult> Login([FromBody] LoginDTO loginRequestDto)
+
+        //[HttpPost("Login")]
+        //public async Task<IActionResult> Login([FromBody] LoginDTO loginRequestDto)
+        //{
+        //    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+
+        //    if (user == null) return NotFound(new { Message = "User not found" });
+
+        //    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+        //        return Unauthorized(new { Message = "Invalid email or password" });
+
+        //    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+
+        //    return Ok(new
+        //    {
+
+        //        Message = "Login Successfully",
+        //        Success = true,
+        //        Data = new
+        //        {
+        //            Token = GenerateToken(user),
+        //            user.Id,
+        //            user.Email,
+        //            user.UserName,
+        //            user.Address,
+        //            user.MainImg,
+        //            user.CoverImg,
+        //        }
+        //    });
+        //}
+
+        [HttpPost("CompanyLogin")]
+        public async Task<IActionResult> CompanyLogin([FromBody] LoginDTO loginRequestDto)
         {
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
@@ -278,16 +240,19 @@ namespace CompanyTraining.Controllers
             if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
                 return Unauthorized(new { Message = "Invalid email or password" });
 
+            // تحقق إذا كان المستخدم من نوع شركة
+            if (!await _userManager.IsInRoleAsync(user, "Company"))
+                return Unauthorized(new { Message = "User is not a Company" });
+
             await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
 
             return Ok(new
             {
-
-                Message = "Login Successfully",
+                Message = "Company Login Successfully",
                 Success = true,
                 Data = new
                 {
-                    Token = GenerateToken(user),
+                    Token = await GenerateToken(user),
                     user.Id,
                     user.Email,
                     user.UserName,
@@ -297,33 +262,70 @@ namespace CompanyTraining.Controllers
                 }
             });
         }
-        //[HttpPost("Login")]
-        //public async Task<IActionResult> Login([FromBody] LoginDTO loginDTO)
+
+        //[HttpPost("UserLogin")]
+        //public async Task<IActionResult> UserLogin([FromBody] LoginDTO loginRequestDto)
         //{
-        //    var appUser = await _userManager.FindByEmailAsync(loginDTO.Email);
+        //    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
-        //    if (appUser != null)
+        //    if (user == null) return NotFound(new { Message = "User not found" });
+
+        //    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+        //        return Unauthorized(new { Message = "Invalid email or password" });
+
+        //    // تحقق إذا كان المستخدم من نوع User
+        //    if (!await _userManager.IsInRoleAsync(user, "User"))
+        //        return Unauthorized(new { Message = "User is not a User" });
+
+        //    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+
+        //    return Ok(new
         //    {
-        //        var result = await _userManager.CheckPasswordAsync(appUser, loginDTO.Password);
-
-        //        if (result)
+        //        Message = "User Login Successfully",
+        //        Success = true,
+        //        Data = new
         //        {
-        //            // Login
-        //            await _signInManager.SignInAsync(appUser, loginDTO.RememberMe);
-
-        //            return NoContent();
+        //            Token = await GenerateToken(user),
+        //            user.Id,
+        //            user.Email,
+        //            user.UserName,
+        //            user.Address,
+        //            user.MainImg,
+        //            user.CoverImg,
         //        }
-        //        else
-        //        {
-        //            ModelStateDictionary keyValuePairs = new();
-        //            keyValuePairs.AddModelError("Error", "Invalid user name or password");
-        //            return BadRequest(keyValuePairs);
-        //        }
-        //    }
+        //    });
+        //}
 
-        //    return NotFound();
+        [HttpPost("AdminLogin")]
+        public async Task<IActionResult> AdminLogin([FromBody] LoginDTO loginRequestDto)
+        {
+            var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
+            if (user == null) return NotFound(new { Message = "User not found" });
 
+            if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+                return Unauthorized(new { Message = "Invalid email or password" });
+
+            // تحقق إذا كان المستخدم من نوع Admin
+            if (!await _userManager.IsInRoleAsync(user, "Admin"))
+                return Unauthorized(new { Message = "User is not an Admin" });
+
+            await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+
+            return Ok(new
+            {
+                Message = "Admin Login Successfully",
+                Success = true,
+                Data = new
+                {
+                    Token = await GenerateToken(user),
+                    user.Id,
+                    user.Email,
+                    user.UserName,
+                    user.MainImg,
+                }
+            });
+        }
 
 
         [HttpGet("Logout")]
@@ -335,6 +337,7 @@ namespace CompanyTraining.Controllers
             await _signInManager.SignOutAsync();
             return NoContent();
         }
+
 
         [HttpGet("Profile")]
         [Authorize]
@@ -355,6 +358,7 @@ namespace CompanyTraining.Controllers
 
            );
         }
+
 
         [HttpPut("EditProfile")]
         public async Task<IActionResult> EditProfile([FromForm] ProfileRequest profileRequest)
@@ -383,13 +387,13 @@ namespace CompanyTraining.Controllers
             {
                 if (!string.IsNullOrEmpty(userApp.MainImg))
                 {
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "images/company/mainimgs", userApp.MainImg);
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "Images/company/mainimgs", userApp.MainImg);
                     if (System.IO.File.Exists(oldPath))
                     {
                         System.IO.File.Delete(oldPath);
                     }
                 }
-                userApp.MainImg = await SaveFileAsync(profileRequest.MainImgFile, "images/company/mainimgs");
+                userApp.MainImg = await SaveFileAsync(profileRequest.MainImgFile, "Images/company/mainimgs");
                 isUpdated = true;
             }
 
@@ -397,13 +401,13 @@ namespace CompanyTraining.Controllers
             {
                 if (!string.IsNullOrEmpty(userApp.CoverImg))
                 {
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "images/company/coverimgs", userApp.CoverImg);
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "Images/company/coverimgs", userApp.CoverImg);
                     if (System.IO.File.Exists(oldPath))
                     {
                         System.IO.File.Delete(oldPath);
                     }
                 }
-                userApp.CoverImg = await SaveFileAsync(profileRequest.CoverImgFile, "images/company/coverimgs");
+                userApp.CoverImg = await SaveFileAsync(profileRequest.CoverImgFile, "Images/company/coverimgs");
                 isUpdated = true;
             }
             if (isUpdated)
