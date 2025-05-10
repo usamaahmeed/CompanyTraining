@@ -16,28 +16,6 @@ namespace CompanyTraining.Repositories
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
-        {
-            await _dbSet.AddAsync(entity, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return entity;
-        }
-        public async Task<T> EditAsync(T entity, CancellationToken cancellationToken = default)
-        {
-            _dbSet.Update(entity);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return entity;
-        }
-        public async Task<T> DeleteAsync(T entity, CancellationToken cancellationToken = default)
-        {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync(cancellationToken);
-
-            return entity;
-        }
-
         public async Task<bool> CommitAsync(CancellationToken cancellationToken = default)
         {
             try
@@ -45,12 +23,35 @@ namespace CompanyTraining.Repositories
                 await _context.SaveChangesAsync(cancellationToken);
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
                 return false;
             }
         }
+        public async Task<T> CreateAsync(T entity, CancellationToken cancellationToken = default)
+        {
+            await _dbSet.AddAsync(entity, cancellationToken);
+            await CommitAsync(cancellationToken);
+
+            return entity;
+        }
+        public async Task<T> EditAsync(T entity, CancellationToken cancellationToken = default)
+        {
+            _dbSet.Update(entity);
+            await CommitAsync(cancellationToken);
+
+            return entity;
+        }
+        public async Task<T> DeleteAsync(T entity, CancellationToken cancellationToken = default)
+        {
+            _dbSet.Remove(entity);
+            await CommitAsync(cancellationToken);
+
+            return entity;
+        }
+
+       
 
         public IQueryable<T> Get(Expression<Func<T, bool>>? filter = null, Expression<Func<T, object>>[]? includes = null, bool tracked = true)
         {
