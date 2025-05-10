@@ -88,7 +88,9 @@ namespace CompanyTraining
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IPackageRepository, PackageRepository>();
             builder.Services.AddScoped<ISubscribeRepository, SubscribeRepository>();
-            var config = TypeAdapterConfig.GlobalSettings;
+			builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+
+			var config = TypeAdapterConfig.GlobalSettings;
             config.Scan(Assembly.GetExecutingAssembly());
             builder.Services.AddSingleton<IMapper>(new Mapper(config));
 

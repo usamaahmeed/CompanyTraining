@@ -35,16 +35,16 @@ namespace CompanyTraining.Controllers
             this._subscribeRepository = subscribeRepository;
             this._packageRepository = packageRepository;
         }
-
         private bool IsValidFile(IFormFile formFile) => (formFile != null && formFile.Length > 0);
-
         private async Task<string> GenerateToken(ApplicationUser user)
         {
             var userRoles = await _userManager.GetRolesAsync(user);
             var claims = new List<Claim>
               {
+                   new Claim(JwtRegisteredClaimNames.Sub, user.Id), // Subject (user ID)
                    new Claim(ClaimTypes.NameIdentifier, user.Id),
-                   new Claim(ClaimTypes.Email, user.Email),
+                   new Claim(JwtRegisteredClaimNames.Email, user.Email),                  
+                   new Claim(JwtRegisteredClaimNames.Name, user.UserName), // For User.Identity.Name
               };
             foreach (var role in userRoles) {
                 claims.Add(new Claim(ClaimTypes.Role,role));
@@ -65,8 +65,6 @@ namespace CompanyTraining.Controllers
             var securityToken = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(securityToken);
         }
-
-
         private async Task<string> SaveFileAsync(IFormFile file, string folderPath)
         {
             var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), folderPath);
@@ -89,8 +87,6 @@ namespace CompanyTraining.Controllers
             var imageUrl = $"{baseUrl}/{folderPath}/{fileName}";
             return imageUrl; // Return the full URL
         }
-
-
         private async Task<Session> CreateStripeSession(Package package)
         {
             var options = new SessionCreateOptions
@@ -124,6 +120,22 @@ namespace CompanyTraining.Controllers
             var service = new SessionService();
             return await service.CreateAsync(options);
         }
+        private async Task HandleFileUploadAndUpdateUser(ApplicationUser applicationUser, IFormFile mainImgFile, IFormFile coverImgFile = null)
+        {
+            if (IsValidFile(mainImgFile))
+            {
+                var mainImgFileName = await SaveFileAsync(mainImgFile, "Images/company/mainimgs");
+                applicationUser.MainImg = mainImgFileName;
+            }
+
+            if (IsValidFile(coverImgFile))
+            {
+                var coverImgFileName = await SaveFileAsync(coverImgFile, "Images/company/coverimgs");
+                applicationUser.CoverImg = coverImgFileName;
+            }
+
+            await _userManager.UpdateAsync(applicationUser);
+        }
 
         [HttpPost("Register")]
         public async Task<IActionResult> Register([FromForm] RegisterDTO registerDTO)
@@ -133,22 +145,29 @@ namespace CompanyTraining.Controllers
             {
                 return BadRequest("Invalid role selected.");
             }
+
             else
             {
                 ApplicationUser ApplicationUser = registerDTO.Adapt<ApplicationUser>();
 
                 if (registerDTO.Role == "User")
                 {
+                    var company = await _userManager.GetUserAsync(User);
+
+                    if(company==null)
+                        return NotFound();
+
+                    ApplicationUser.CompanyId = company.Id;
+
                     var result = await _userManager.CreateAsync(ApplicationUser, registerDTO.Password);
+
                     if (!result.Succeeded)
                         return BadRequest(result.Errors);
-                    if (IsValidFile(registerDTO.MainImgFile))
-                    {
-                        var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
-                        ApplicationUser.MainImg = mainImgFileName;
-                        await _userManager.UpdateAsync(ApplicationUser);
-                    }
+                    
+                     await HandleFileUploadAndUpdateUser(ApplicationUser,registerDTO.MainImgFile,registerDTO.CoverImgFile!);
+
                     await _userManager.AddToRoleAsync(ApplicationUser, "User");
+
                     var roles = await _userManager.GetRolesAsync(ApplicationUser);
                     var role = roles.FirstOrDefault();
                     return Ok(new
@@ -174,16 +193,8 @@ namespace CompanyTraining.Controllers
                     var result = await _userManager.CreateAsync(ApplicationUser, registerDTO.Password);
                     if (!result.Succeeded || package == null)
                         return BadRequest(result.Errors);
-                    if (IsValidFile(registerDTO.MainImgFile) || IsValidFile(registerDTO.CoverImgFile))
-                    {
-                        var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
-                        var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "Images/company/coverimgs");
 
-                        ApplicationUser.MainImg = mainImgFileName;
-                        ApplicationUser.CoverImg = coverImgFileName;
-
-                        await _userManager.UpdateAsync(ApplicationUser);
-                    }
+                    await HandleFileUploadAndUpdateUser(ApplicationUser, registerDTO.MainImgFile, registerDTO.CoverImgFile);
 
                     await _userManager.AddToRoleAsync(ApplicationUser, "Company");
 
@@ -232,41 +243,11 @@ namespace CompanyTraining.Controllers
             }
 
             
-       }           
-        
+       }
 
-        //[HttpPost("Login")]
-        //public async Task<IActionResult> Login([FromBody] LoginDTO loginRequestDto)
-        //{
-        //    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
-        //    if (user == null) return NotFound(new { Message = "User not found" });
-
-        //    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
-        //        return Unauthorized(new { Message = "Invalid email or password" });
-
-        //    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
-
-        //    return Ok(new
-        //    {
-
-        //        Message = "Login Successfully",
-        //        Success = true,
-        //        Data = new
-        //        {
-        //            Token = GenerateToken(user),
-        //            user.Id,
-        //            user.Email,
-        //            user.UserName,
-        //            user.Address,
-        //            user.MainImg,
-        //            user.CoverImg,
-        //        }
-        //    });
-        //}
-
-        [HttpPost("CompanyLogin")]
-        public async Task<IActionResult> CompanyLogin([FromBody] LoginDTO loginRequestDto)
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login([FromBody] LoginDTO loginRequestDto)
         {
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
@@ -275,15 +256,12 @@ namespace CompanyTraining.Controllers
             if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
                 return Unauthorized(new { Message = "Invalid email or password" });
 
-            // تحقق إذا كان المستخدم من نوع شركة
-            if (!await _userManager.IsInRoleAsync(user, "Company"))
-                return Unauthorized(new { Message = "User is not a Company" });
-
             await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
 
             return Ok(new
             {
-                Message = "Company Login Successfully",
+
+                Message = "Login Successfully",
                 Success = true,
                 Data = new
                 {
@@ -298,8 +276,8 @@ namespace CompanyTraining.Controllers
             });
         }
 
-        //[HttpPost("UserLogin")]
-        //public async Task<IActionResult> UserLogin([FromBody] LoginDTO loginRequestDto)
+        //[HttpPost("CompanyLogin")]
+        //public async Task<IActionResult> CompanyLogin([FromBody] LoginDTO loginRequestDto)
         //{
         //    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
@@ -308,15 +286,14 @@ namespace CompanyTraining.Controllers
         //    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
         //        return Unauthorized(new { Message = "Invalid email or password" });
 
-        //    // تحقق إذا كان المستخدم من نوع User
-        //    if (!await _userManager.IsInRoleAsync(user, "User"))
-        //        return Unauthorized(new { Message = "User is not a User" });
+        //    if (!await _userManager.IsInRoleAsync(user, "Company"))
+        //        return Unauthorized(new { Message = "User is not a Company" });
 
         //    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
 
         //    return Ok(new
         //    {
-        //        Message = "User Login Successfully",
+        //        Message = "Company Login Successfully",
         //        Success = true,
         //        Data = new
         //        {
@@ -331,39 +308,73 @@ namespace CompanyTraining.Controllers
         //    });
         //}
 
-        [HttpPost("AdminLogin")]
-        public async Task<IActionResult> AdminLogin([FromBody] LoginDTO loginRequestDto)
-        {
-            var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+        ////[HttpPost("UserLogin")]
+        ////public async Task<IActionResult> UserLogin([FromBody] LoginDTO loginRequestDto)
+        ////{
+        ////    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
-            if (user == null) return NotFound(new { Message = "User not found" });
+        ////    if (user == null) return NotFound(new { Message = "User not found" });
 
-            if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
-                return Unauthorized(new { Message = "Invalid email or password" });
+        ////    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+        ////        return Unauthorized(new { Message = "Invalid email or password" });
 
-            // تحقق إذا كان المستخدم من نوع Admin
-            if (!await _userManager.IsInRoleAsync(user, "Admin"))
-                return Unauthorized(new { Message = "User is not an Admin" });
+        ////    // تحقق إذا كان المستخدم من نوع User
+        ////    if (!await _userManager.IsInRoleAsync(user, "User"))
+        ////        return Unauthorized(new { Message = "User is not a User" });
 
-            await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+        ////    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
 
-            return Ok(new
-            {
-                Message = "Admin Login Successfully",
-                Success = true,
-                Data = new
-                {
-                    Token = await GenerateToken(user),
-                    user.Id,
-                    user.Email,
-                    user.UserName,
-                    user.MainImg,
-                }
-            });
-        }
+        ////    return Ok(new
+        ////    {
+        ////        Message = "User Login Successfully",
+        ////        Success = true,
+        ////        Data = new
+        ////        {
+        ////            Token = await GenerateToken(user),
+        ////            user.Id,
+        ////            user.Email,
+        ////            user.UserName,
+        ////            user.Address,
+        ////            user.MainImg,
+        ////            user.CoverImg,
+        ////        }
+        ////    });
+        ////}
+
+        //[HttpPost("AdminLogin")]
+        //public async Task<IActionResult> AdminLogin([FromBody] LoginDTO loginRequestDto)
+        //{
+        //    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+
+        //    if (user == null) return NotFound(new { Message = "User not found" });
+
+        //    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+        //        return Unauthorized(new { Message = "Invalid email or password" });
+
+        //    // تحقق إذا كان المستخدم من نوع Admin
+        //    if (!await _userManager.IsInRoleAsync(user, "Admin"))
+        //        return Unauthorized(new { Message = "User is not an Admin" });
+
+        //    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+
+        //    return Ok(new
+        //    {
+        //        Message = "Admin Login Successfully",
+        //        Success = true,
+        //        Data = new
+        //        {
+        //            Token = await GenerateToken(user),
+        //            user.Id,
+        //            user.Email,
+        //            user.UserName,
+        //            user.MainImg,
+        //        }
+        //    });
+        //}
 
 
         [HttpGet("Logout")]
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             var user = _userManager.GetUserId(User);
@@ -393,9 +404,8 @@ namespace CompanyTraining.Controllers
 
            );
         }
-
-
         [HttpPut("EditProfile")]
+        [Authorize]
         public async Task<IActionResult> EditProfile([FromForm] ProfileRequest profileRequest)
         {
             bool isUpdated = false;
@@ -467,8 +477,7 @@ namespace CompanyTraining.Controllers
         }
 
         [HttpPut("ChangePassword")]
-        [Authorize()]
-
+        [Authorize]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO changePasswordDTO)
         {
             var user = await _userManager.GetUserAsync(User);
