@@ -5,9 +5,9 @@ namespace CompanyTraining.Models
 
     public class ApplicationUser : IdentityUser
     {
+
         public string? Address { get; set; }
         public string? MainImg { get; set; }
-        public string? CoverImg {  get; set; }
         public string? CompanyId { get; set; }
         public ApplicationUser? Company { get; set; } 
         public IEnumerable<Subscribe> Subscribes { get; set; } = null!;

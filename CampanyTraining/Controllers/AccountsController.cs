@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Stripe;
 using Stripe.Checkout;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -174,13 +175,11 @@ namespace CompanyTraining.Controllers
                     var result = await _userManager.CreateAsync(ApplicationUser, registerDTO.Password);
                     if (!result.Succeeded || package == null)
                         return BadRequest(result.Errors);
-                    if (IsValidFile(registerDTO.MainImgFile) || IsValidFile(registerDTO.CoverImgFile))
+                    if (IsValidFile(registerDTO.MainImgFile))
                     {
                         var mainImgFileName = await SaveFileAsync(registerDTO.MainImgFile, "Images/company/mainimgs");
-                        var coverImgFileName = await SaveFileAsync(registerDTO.CoverImgFile, "Images/company/coverimgs");
 
                         ApplicationUser.MainImg = mainImgFileName;
-                        ApplicationUser.CoverImg = coverImgFileName;
 
                         await _userManager.UpdateAsync(ApplicationUser);
                     }
@@ -218,7 +217,6 @@ namespace CompanyTraining.Controllers
                             ApplicationUser.UserName,
                             ApplicationUser.Address,
                             ApplicationUser.MainImg,
-                            ApplicationUser.CoverImg,
                             Role = role,
                             Stripe = session.Url
                         },
@@ -265,7 +263,7 @@ namespace CompanyTraining.Controllers
         //    });
         //}
 
-        [HttpPost("CompanyLogin")]
+        [HttpPost("Login")]
         public async Task<IActionResult> CompanyLogin([FromBody] LoginDTO loginRequestDto)
         {
             var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
@@ -276,24 +274,23 @@ namespace CompanyTraining.Controllers
                 return Unauthorized(new { Message = "Invalid email or password" });
 
             // تحقق إذا كان المستخدم من نوع شركة
-            if (!await _userManager.IsInRoleAsync(user, "Company"))
-                return Unauthorized(new { Message = "User is not a Company" });
+            if (!await _userManager.IsInRoleAsync(user, loginRequestDto.Role))
+                return Unauthorized(new { Message = "User is not found" });
 
-            await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
 
             return Ok(new
             {
-                Message = "Company Login Successfully",
+                Message = "User Login Successfully",
                 Success = true,
                 Data = new
                 {
                     Token = await GenerateToken(user),
-                    user.Id,
-                    user.Email,
-                    user.UserName,
-                    user.Address,
-                    user.MainImg,
-                    user.CoverImg,
+                   id= user.Id,
+                    email =user.Email,
+                   user_name= user.UserName,
+                    address = user.Address,
+                    main_img= user.MainImg,
+                    role=loginRequestDto.Role,
                 }
             });
         }
@@ -331,36 +328,36 @@ namespace CompanyTraining.Controllers
         //    });
         //}
 
-        [HttpPost("AdminLogin")]
-        public async Task<IActionResult> AdminLogin([FromBody] LoginDTO loginRequestDto)
-        {
-            var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
+        //[HttpPost("AdminLogin")]
+        //public async Task<IActionResult> AdminLogin([FromBody] LoginDTO loginRequestDto)
+        //{
+        //    var user = await _userManager.FindByEmailAsync(loginRequestDto.Email);
 
-            if (user == null) return NotFound(new { Message = "User not found" });
+        //    if (user == null) return NotFound(new { Message = "User not found" });
 
-            if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
-                return Unauthorized(new { Message = "Invalid email or password" });
+        //    if (user.Email != loginRequestDto.Email || !await _userManager.CheckPasswordAsync(user, loginRequestDto.Password))
+        //        return Unauthorized(new { Message = "Invalid email or password" });
 
-            // تحقق إذا كان المستخدم من نوع Admin
-            if (!await _userManager.IsInRoleAsync(user, "Admin"))
-                return Unauthorized(new { Message = "User is not an Admin" });
+        //    // تحقق إذا كان المستخدم من نوع Admin
+        //    if (!await _userManager.IsInRoleAsync(user, "Admin"))
+        //        return Unauthorized(new { Message = "User is not an Admin" });
 
-            await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
+        //    await _signInManager.SignInAsync(user, loginRequestDto.RememberMe);
 
-            return Ok(new
-            {
-                Message = "Admin Login Successfully",
-                Success = true,
-                Data = new
-                {
-                    Token = await GenerateToken(user),
-                    user.Id,
-                    user.Email,
-                    user.UserName,
-                    user.MainImg,
-                }
-            });
-        }
+        //    return Ok(new
+        //    {
+        //        Message = "Admin Login Successfully",
+        //        Success = true,
+        //        Data = new
+        //        {
+        //            Token = await GenerateToken(user),
+        //            user.Id,
+        //            user.Email,
+        //            user.UserName,
+        //            user.MainImg,
+        //        }
+        //    });
+        //}
 
 
         [HttpGet("Logout")]
@@ -387,7 +384,14 @@ namespace CompanyTraining.Controllers
             {
                 Message = "Profile Loaded Successfully",
                 Success = true,
-                Data = profile,
+                Data =  new
+                {
+                    id=  profile.Id,
+                    email=profile.Email,
+                    user_name= profile.UserName,
+                    address=profile.Address,
+                    main_img= profile.MainImg,
+                }
 
             }
 
@@ -402,9 +406,9 @@ namespace CompanyTraining.Controllers
             var userApp = await _userManager.GetUserAsync(User);
             if (userApp == null)
                 return NotFound();
-            if (profileRequest.CompanyName != null)
+            if (profileRequest.UserName != null)
             {
-                userApp.UserName = profileRequest.CompanyName;
+                userApp.UserName = profileRequest.UserName;
                 isUpdated = true;
             }
 
@@ -431,20 +435,6 @@ namespace CompanyTraining.Controllers
                 userApp.MainImg = await SaveFileAsync(profileRequest.MainImgFile, "Images/company/mainimgs");
                 isUpdated = true;
             }
-
-            if (IsValidFile(profileRequest.CoverImgFile))
-            {
-                if (!string.IsNullOrEmpty(userApp.CoverImg))
-                {
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "Images/company/coverimgs", userApp.CoverImg);
-                    if (System.IO.File.Exists(oldPath))
-                    {
-                        System.IO.File.Delete(oldPath);
-                    }
-                }
-                userApp.CoverImg = await SaveFileAsync(profileRequest.CoverImgFile, "Images/company/coverimgs");
-                isUpdated = true;
-            }
             if (isUpdated)
             {
                 await _userManager.UpdateAsync(userApp);
@@ -452,15 +442,7 @@ namespace CompanyTraining.Controllers
                 {
                     Message = "Profile Is Updated Successfully",
                     Success = true,
-                    Data = new
-                    {
-                        userApp.Id,
-                        userApp.Email,
-                        userApp.UserName,
-                        userApp.Address,
-                        userApp.MainImg,
-                        userApp.CoverImg,
-                    }
+                   
                 });
             }
             return NoContent();

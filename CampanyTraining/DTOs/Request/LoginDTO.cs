@@ -10,6 +10,7 @@ namespace CompanyTraining.DTOs.Request
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-        public bool RememberMe { get; set; }
+        [Required]
+        public string Role { get; set; } = null!;
     }
 }

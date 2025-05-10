@@ -11,8 +11,8 @@
             //    .Map(des => des.UserName, src => src.CompanyName);
             //TypeAdapterConfig<ProfileRequest, ApplicationCompany>.NewConfig()
             //    .IgnoreNullValues(true);
-            config.NewConfig<ApplicationUser, ProfileResponse>()
-             .Map(des => des.CompanyName, src => src.UserName);
+            //config.NewConfig<ApplicationUser, ProfileResponse>()
+            // .Map(des => des.CompanyName, src => src.UserName);
 
             config.NewConfig<Subscribe, CompanyResponse>()
                    .Map(des => des.PackageName, src => src.Package.Name)

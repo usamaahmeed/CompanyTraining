@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CompanyTraining.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CompanyTraining.Areas.Admin.Controllers
 {
-    [Route("api/Areas/Admin/Controllers/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class PackageController : ControllerBase
     {
@@ -45,14 +46,24 @@ namespace CompanyTraining.Areas.Admin.Controllers
             if (packageRequest == null)
                 return BadRequest();
             await _packageRepository.CreateAsync(packageRequest.Adapt<Package>());
-            return Created();
+            return Ok(new
+            {
+                Message = "Packages Created Successfully",
+                Success = true,
+
+            });
         }
 
         [HttpGet("GetAll")]
         public IActionResult Get()
         {
             var packages = _packageRepository.Get(tracked: false);
-            return Ok(packages.Adapt<IEnumerable<PackageResponse>>());
+            return Ok(new{
+                Message = "Packages Return Successfully",
+                Success = true,
+                Data = packages.Adapt<IEnumerable<PackageResponse>>()
+
+            });
         }
 
         [HttpPut("Update/{id}")]
@@ -66,7 +77,12 @@ namespace CompanyTraining.Areas.Admin.Controllers
                 packageInDb.Id = id;
                 await _packageRepository.CommitAsync();
             }
-            return NoContent();
+            return Ok(new
+            {
+                Message = "Packages Update Successfully",
+                Success = true,
+
+            });
         }
 
 
@@ -77,7 +93,12 @@ namespace CompanyTraining.Areas.Admin.Controllers
             if (package == null)
                 return NotFound();
             await _packageRepository.DeleteAsync(package);
-            return NoContent();
+            return Ok(new
+            {
+                Message = "Packages Delete Successfully",
+                Success = true,
+
+            });
         }
     }
 }
