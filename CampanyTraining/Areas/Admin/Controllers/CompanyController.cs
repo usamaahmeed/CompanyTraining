@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompanyTraining.Areas.Admin.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class CompanyController : ControllerBase
     {
@@ -13,8 +15,8 @@ namespace CompanyTraining.Areas.Admin.Controllers
         {
             this._subscribeRepository = subscribeRepository;
         }
-        [HttpGet("Get")]
-        public IActionResult Get()
+        [HttpGet("GetAll")]
+        public IActionResult GetAll()
         {
             var subscribesWithComapny = _subscribeRepository.Get(includes: [
                 e=>e.Package,

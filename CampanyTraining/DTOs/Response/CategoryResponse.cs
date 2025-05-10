@@ -6,6 +6,6 @@ namespace CompanyTraining.DTOs.Response
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public IEnumerable<Course> Courses { get; set; } = null!;
+        public List<CourseResponse> Courses { get; set; }
     }
 }

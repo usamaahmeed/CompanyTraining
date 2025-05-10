@@ -2,7 +2,7 @@
 
 namespace CompanyTraining.DTOs.Request
 {
-    public class RegisterDTO
+    public class UserRegisterDTO
     {
         [Required] 
         public string UserName { get; set; } = string.Empty;
@@ -24,8 +24,8 @@ namespace CompanyTraining.DTOs.Request
 
         [Required]
         public IFormFile MainImgFile { get; set; } = null!;
-
-        public int? PackageId { get; set; }
+        [Required]
+        public string CompanyId { get; set; }
         [Required]
         public string Role { get; set; }=null!;
 

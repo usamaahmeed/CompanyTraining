@@ -1,9 +1,11 @@
 ﻿using CompanyTraining.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CompanyTraining.Areas.Admin.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")]
     [ApiController]
     public class PackageController : ControllerBase
     {
@@ -50,6 +52,7 @@ namespace CompanyTraining.Areas.Admin.Controllers
             {
                 Message = "Packages Created Successfully",
                 Success = true,
+                Data = packageRequest.Adapt<PackageResponse>()
 
             });
         }
@@ -81,6 +84,7 @@ namespace CompanyTraining.Areas.Admin.Controllers
             {
                 Message = "Packages Update Successfully",
                 Success = true,
+                Data = packageInDb.Adapt<PackageResponse>()
 
             });
         }
