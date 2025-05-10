@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompanyTraining.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250506201549_AddDesandDurationDay")]
-    partial class AddDesandDurationDay
+    [Migration("20250510090937_addDatabase")]
+    partial class addDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace CompanyTraining.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CompanyTraining.Models.ApplicationCompany", b =>
+            modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -36,12 +36,11 @@ namespace CompanyTraining.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("CompanyId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CoverImg")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -58,7 +57,6 @@ namespace CompanyTraining.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("MainImg")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
@@ -90,6 +88,8 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -101,36 +101,6 @@ namespace CompanyTraining.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApplicationCompanyId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApplicationCompanyId");
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.ToTable("ApplicationUser");
-                });
-
             modelBuilder.Entity("CompanyTraining.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -139,7 +109,7 @@ namespace CompanyTraining.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApplicationCompanyId")
+                    b.Property<string>("ApplicationUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
@@ -149,7 +119,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationCompanyId");
+                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Category");
                 });
@@ -342,14 +312,10 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.Subscribe", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                    b.Property<string>("SessionId")
+                        .HasColumnType("nvarchar(450)");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApplicationCompanyId")
-                        .IsRequired()
+                    b.Property<string>("ApplicationUserId")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("PackageId")
@@ -361,9 +327,9 @@ namespace CompanyTraining.Migrations
                     b.Property<DateTime?>("SubscriptionStartDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.HasKey("SessionId", "ApplicationUserId");
 
-                    b.HasIndex("ApplicationCompanyId");
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("PackageId");
 
@@ -393,8 +359,8 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.UserCourse", b =>
                 {
-                    b.Property<int>("ApplicationUserId")
-                        .HasColumnType("int");
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
@@ -427,8 +393,9 @@ namespace CompanyTraining.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ApplicationUserId")
-                        .HasColumnType("int");
+                    b.Property<string>("ApplicationUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
@@ -586,20 +553,19 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", "ApplicationCompany")
-                        .WithMany("ApplicationUsers")
-                        .HasForeignKey("ApplicationCompanyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", "Company")
+                        .WithMany("Employees")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("ApplicationCompany");
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Category", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", "ApplicationCompany")
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", "ApplicationCompany")
                         .WithMany()
-                        .HasForeignKey("ApplicationCompanyId")
+                        .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -663,9 +629,9 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.Subscribe", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", "ApplicationCompany")
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", "ApplicationCompany")
                         .WithMany("Subscribes")
-                        .HasForeignKey("ApplicationCompanyId")
+                        .HasForeignKey("ApplicationUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -754,7 +720,7 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -763,7 +729,7 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -778,7 +744,7 @@ namespace CompanyTraining.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -787,22 +753,19 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationCompany", null)
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CompanyTraining.Models.ApplicationCompany", b =>
-                {
-                    b.Navigation("ApplicationUsers");
-
-                    b.Navigation("Subscribes");
-                });
-
             modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("Employees");
+
+                    b.Navigation("Subscribes");
+
                     b.Navigation("UserCourses");
 
                     b.Navigation("UserQuizAttempts");

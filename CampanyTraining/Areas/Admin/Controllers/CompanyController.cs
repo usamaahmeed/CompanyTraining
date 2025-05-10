@@ -20,16 +20,35 @@ namespace CompanyTraining.Areas.Admin.Controllers
                 e=>e.Package,
                 e=>e.ApplicationCompany,
                 ]);
-            return Ok(subscribesWithComapny.Adapt<IEnumerable<CompanyResponse>>());
+             return Ok(new
+            {
+                Message = "Get company Successfully",
+                Success = true,
+                Data = subscribesWithComapny.Adapt<IEnumerable<CompanyResponse>>()
+
+             });
         }
 
         [HttpGet("GetRevenue")]
         public IActionResult GetRevenue()
         {
-             var totalRevenue = _subscribeRepository.Get(includes: [
+             var total_revenue = _subscribeRepository.Get(includes: [
                 e=>e.Package,
                 ]).Sum(e=>e.Package.Price);
-            return Ok(totalRevenue);
+
+            return Ok(new
+            {
+                Message = "Get Revenue Successfully",
+                Success = true,
+                Data = new
+                {
+                    total_revenue
+                }
+
+                
+
+            });
+          
         }
     }
 }

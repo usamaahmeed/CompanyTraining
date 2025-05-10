@@ -20,10 +20,9 @@ namespace CompanyTraining.DTOs.Request
         [Required]
         public IFormFile MainImgFile { get; set; } = null!;
 
-        public IFormFile? CoverImgFile { get; set; }
         public int? PackageId { get; set; }
         [Required]
-        public string Role { get; set; }
+        public string Role { get; set; }=null!;
 
     }
 }
