@@ -91,6 +91,7 @@ namespace CompanyTraining
 			builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 
+
             var config = TypeAdapterConfig.GlobalSettings;
             config.Scan(Assembly.GetExecutingAssembly());
             builder.Services.AddSingleton<IMapper>(new Mapper(config));
