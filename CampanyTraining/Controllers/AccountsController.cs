@@ -237,51 +237,51 @@ namespace CompanyTraining.Controllers
         //     }
 
         //}
-        [HttpPost("CreateUser")]
-        [Authorize]
+        //[HttpPost("CreateUser")]
+        //[Authorize]
 
-        public async Task<IActionResult> CreateUser([FromForm] UserRegisterDTO registerDTO)
-        {
-            if (registerDTO.Role != "User")
-                return BadRequest("Invalid role.");
+        //public async Task<IActionResult> CreateUser([FromForm] UserRegisterDTO registerDTO)
+        //{
+        //    if (registerDTO.Role != "User")
+        //        return BadRequest("Invalid role.");
 
-            var currentCompany = await _userManager.GetUserAsync(User);
-            if (currentCompany == null)
-                return NotFound("Authenticated company not found.");
+        //    var currentCompany = await _userManager.GetUserAsync(User);
+        //    if (currentCompany == null)
+        //        return NotFound("Authenticated company not found.");
 
-            if (currentCompany.Id != registerDTO.CompanyId)
-                return Unauthorized("You can only register users under your own company.");
+        //    if (currentCompany.Id != registerDTO.CompanyId)
+        //        return Unauthorized("You can only register users under your own company.");
 
-            var applicationUser = registerDTO.Adapt<ApplicationUser>();
-            applicationUser.CompanyId = registerDTO.CompanyId;
+        //    var applicationUser = registerDTO.Adapt<ApplicationUser>();
+        //    applicationUser.CompanyId = registerDTO.CompanyId;
 
-            var result = await _userManager.CreateAsync(applicationUser, registerDTO.Password);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
+        //    var result = await _userManager.CreateAsync(applicationUser, registerDTO.Password);
+        //    if (!result.Succeeded)
+        //        return BadRequest(result.Errors);
 
-            await HandleFileUploadAndUpdateUser(applicationUser, registerDTO.MainImgFile);
-            await _userManager.AddToRoleAsync(applicationUser, "User");
+        //    await HandleFileUploadAndUpdateUser(applicationUser, registerDTO.MainImgFile);
+        //    await _userManager.AddToRoleAsync(applicationUser, "User");
 
-            var roles = await _userManager.GetRolesAsync(applicationUser);
-            var role = roles.FirstOrDefault();
+        //    var roles = await _userManager.GetRolesAsync(applicationUser);
+        //    var role = roles.FirstOrDefault();
 
-            return Ok(new
-            {
-                Message = "User Created Successfully",
-                Success = true,
-                Data = new
-                {
-                    Token = await GenerateToken(applicationUser),
-                    applicationUser.Id,
-                    applicationUser.Email,
-                    user_name = applicationUser.UserName,
-                    applicationUser.Address,
-                    main_img = applicationUser.MainImg,
-                    company_id=applicationUser.CompanyId,
-                    Role = role,
-                },
-            });
-        }
+        //    return Ok(new
+        //    {
+        //        Message = "User Created Successfully",
+        //        Success = true,
+        //        Data = new
+        //        {
+        //            Token = await GenerateToken(applicationUser),
+        //            applicationUser.Id,
+        //            applicationUser.Email,
+        //            user_name = applicationUser.UserName,
+        //            applicationUser.Address,
+        //            main_img = applicationUser.MainImg,
+        //            company_id=applicationUser.CompanyId,
+        //            Role = role,
+        //        },
+        //    });
+        //}
 
 
         [HttpPost("RegisterCompany")]

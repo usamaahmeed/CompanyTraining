@@ -47,12 +47,12 @@ namespace CompanyTraining.Areas.Admin.Controllers
         {
             if (packageRequest == null)
                 return BadRequest();
-            await _packageRepository.CreateAsync(packageRequest.Adapt<Package>());
+            var package= await _packageRepository.CreateAsync(packageRequest.Adapt<Package>());
             return Ok(new
             {
                 Message = "Packages Created Successfully",
                 Success = true,
-                Data = packageRequest.Adapt<PackageResponse>()
+                Data = package
 
             });
         }
