@@ -16,9 +16,18 @@ namespace CompanyTraining.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            //builder.Entity<ApplicationUser>().HasIndex(e => new { e.Email }).IsUnique();
             builder.Entity<Course>().HasOne(e => e.Quiz).WithOne(u => u.Course).HasForeignKey<Quiz>(e => e.CourseId);
+
             builder.Entity<Certificate>().HasOne(e => e.UserCourse).WithOne(e => e.Certificate).HasForeignKey<UserCourse>(e => e.CertificateId);
+
+            builder.Entity<ApplicationUser>().HasIndex(e => e.Email).IsUnique();
+
+            builder.Entity<Course>()
+                .HasOne(c => c.Company)
+                .WithMany(u => u.Courses)
+                .HasForeignKey(c => c.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+                ;
 
 			builder.Entity<ApplicationUser>()
 				.HasMany(u => u.Employees)

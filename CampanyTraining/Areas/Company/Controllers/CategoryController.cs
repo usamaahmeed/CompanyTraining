@@ -13,7 +13,6 @@ namespace CompanyTraining.Areas.Company.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ICategoryRepository _categoryRepository;
-        private readonly ICourseRepository _courseRepository;
 
         public CategoryController(UserManager<ApplicationUser> userManager,ICategoryRepository categoryRepository) 
         {
@@ -28,7 +27,6 @@ namespace CompanyTraining.Areas.Company.Controllers
             {
                 category.Name = categoryRequest.Name;
                 updated = true;
-               
             }
            
             return updated;
@@ -37,17 +35,21 @@ namespace CompanyTraining.Areas.Company.Controllers
         public async Task<IActionResult> Create([FromBody] CategoryRequest categoryRequest)
         {
             var companyApp = await _userManager.GetUserAsync(User);
+
             if(companyApp == null)
                 return NotFound();
+
             var category = categoryRequest.Adapt<Category>();
+
             category.ApplicationUserId = companyApp.Id;
+
             await _categoryRepository.CreateAsync(category);
+
             return Ok(new
             {
                 Message = "Category Created Successfully",
                 Success = true,
                 Data = category.Adapt<CategoryResponse>(),
-
             });
         }
 
@@ -105,7 +107,6 @@ namespace CompanyTraining.Areas.Company.Controllers
             {
                 Message = "Category Deleted Successfully",
                 Success = true,
-
             });
         }
     }

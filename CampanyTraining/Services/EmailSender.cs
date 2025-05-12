@@ -1,28 +1,35 @@
 ﻿using System.Net.Mail;
 using System.Net;
-using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.Extensions.Options;
 
 namespace CompanyTraining.Services
 {
     public class EmailSender : IEmailSender
     {
-        private readonly string _emailFrom = "";
-        private readonly string _emailPassword = "";
+        private readonly EmailSetting _emailSettings;
 
-        public Task SendEmailAsync(string email, string subject, string message)
+        public EmailSender(IOptions<EmailSetting> emailSettings)
         {
-            var client = new SmtpClient("smtp.gmail.com", 587)
+            this._emailSettings = emailSettings.Value;
+        }
+        public async Task SendEmailAsync(string email, string subject, string message)
+        {
+            
+            using (var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.Port))
             {
-                EnableSsl = true,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(_emailFrom, _emailPassword)
-            };
-
-            return client.SendMailAsync(
-                new MailMessage(from: _emailFrom, to: email, subject, message)
+                client.EnableSsl = true;
+                client.Credentials = new NetworkCredential(_emailSettings.SenderEmail,_emailSettings.Password);
+                var mail = new MailMessage()
                 {
-                    IsBodyHtml = true
-                });
+                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
+                    Subject = subject,
+                    IsBodyHtml = true,
+                    Body = message
+                };
+                mail.To.Add(email);
+                await client.SendMailAsync(mail);
+            }
+             
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using MapsterMapper;
+﻿using CompanyTraining.Services;
+using CompanyTraining.Utility;
+using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -90,7 +92,11 @@ namespace CompanyTraining
             builder.Services.AddScoped<ISubscribeRepository, SubscribeRepository>();
 			builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+            builder.Services.AddScoped<IModuleRepository,ModuleRepository>();
+            builder.Services.AddScoped<ILessonRepository, LessonRepository>();
 
+            builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailConfiguration"));
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             var config = TypeAdapterConfig.GlobalSettings;
             config.Scan(Assembly.GetExecutingAssembly());
