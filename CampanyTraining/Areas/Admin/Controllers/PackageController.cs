@@ -53,7 +53,6 @@ namespace CompanyTraining.Areas.Admin.Controllers
                 Message = "Packages Created Successfully",
                 Success = true,
                 Data = package
-
             });
         }
 
@@ -65,7 +64,6 @@ namespace CompanyTraining.Areas.Admin.Controllers
                 Message = "Packages Return Successfully",
                 Success = true,
                 Data = packages.Adapt<IEnumerable<PackageResponse>>()
-
             });
         }
 
@@ -85,10 +83,8 @@ namespace CompanyTraining.Areas.Admin.Controllers
                 Message = "Packages Update Successfully",
                 Success = true,
                 Data = packageInDb.Adapt<PackageResponse>()
-
             });
         }
-
 
         [HttpDelete("Delete/{id}")]
         public async Task<IActionResult> Delete([FromRoute] int id)

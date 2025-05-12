@@ -16,5 +16,10 @@ namespace CompanyTraining.Repositories
             var companies = _dbContext.ApplicationCompanies.Include(e => e.Subscribes).ThenInclude(e=>e.Package);
             return companies;
         }
+
+        public void RemoveRange(IEnumerable<ApplicationUser> users)
+        {
+            _dbContext.RemoveRange(users);
+        }
     }
 }

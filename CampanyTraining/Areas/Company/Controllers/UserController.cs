@@ -16,78 +16,14 @@ namespace CompanyTraining.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IUserRepository _userRepository;
         private readonly JwtOptions _jwtOptions;
 
-        public UserController(UserManager<ApplicationUser> userManager, JwtOptions jwtOptions)
+        public UserController(UserManager<ApplicationUser> userManager,IUserRepository userRepository,JwtOptions jwtOptions)
         {
             this._userManager = userManager;
+            this._userRepository = userRepository;
             this._jwtOptions = jwtOptions;
-        }
-
-        private bool IsValidFile(IFormFile formFile) => (formFile != null && formFile.Length > 0);
-
-        private async Task<string> GenerateToken(ApplicationUser user)
-        {
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var claims = new List<Claim>
-              {
-                   new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                   new Claim(ClaimTypes.NameIdentifier, user.Id),
-                   new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                   new Claim(JwtRegisteredClaimNames.Name, user.UserName), 
-              };
-            foreach (var role in userRoles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, role));
-            }
-            // إنشاء التوكن
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Issuer = _jwtOptions.Issuer,
-                Audience = _jwtOptions.Audience,
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key)),
-                    SecurityAlgorithms.HmacSha256
-                ),
-                Subject = new ClaimsIdentity(claims)
-            };
-
-            var securityToken = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(securityToken);
-        }
-
-        private async Task<string> SaveFileAsync(IFormFile file, string folderPath)
-        {
-            var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), folderPath);
-
-            // Ensure the directory exists
-            if (!Directory.Exists(directoryPath))
-            {
-                Directory.CreateDirectory(directoryPath);
-            }
-
-            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-            var filePath = Path.Combine(directoryPath, fileName);
-
-            using (var stream = System.IO.File.Create(filePath))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var baseUrl = $"http://{Request.Host}";
-            var imageUrl = $"{baseUrl}/{folderPath}/{fileName}";
-            return imageUrl; // Return the full URL
-        }
-
-        private async Task HandleFileUploadAndUpdateUser(ApplicationUser applicationUser, IFormFile mainImgFile)
-        {
-            if (IsValidFile(mainImgFile))
-            {
-                var mainImgFileName = await SaveFileAsync(mainImgFile, "Images/company/mainimgs");
-                applicationUser.MainImg = mainImgFileName;
-            }
-            await _userManager.UpdateAsync(applicationUser);
         }
 
         [HttpPost("CreateUser")]
@@ -104,13 +40,16 @@ namespace CompanyTraining.Controllers
                 return Unauthorized("You can only register users under your own company.");
 
             var applicationUser = registerDTO.Adapt<ApplicationUser>();
-            applicationUser.CompanyId = registerDTO.CompanyId;
+
+            var existedUser = await _userManager.FindByEmailAsync(applicationUser.Email!);
+            if (existedUser != null)
+                return BadRequest("Choose Another Email");
 
             var result = await _userManager.CreateAsync(applicationUser, registerDTO.Password);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            await HandleFileUploadAndUpdateUser(applicationUser, registerDTO.MainImgFile);
+            await Helper.HandleFileUploadAndUpdateUser(applicationUser, registerDTO.MainImgFile, _userManager);
             await _userManager.AddToRoleAsync(applicationUser, "User");
 
             var roles = await _userManager.GetRolesAsync(applicationUser);
@@ -122,7 +61,7 @@ namespace CompanyTraining.Controllers
                 Success = true,
                 Data = new
                 {
-                    Token = await GenerateToken(applicationUser),
+                    Token = await Helper.GenerateToken(applicationUser,_userManager,_jwtOptions),
                     applicationUser.Id,
                     applicationUser.Email,
                     user_name = applicationUser.UserName,
@@ -143,23 +82,14 @@ namespace CompanyTraining.Controllers
                 return NotFound(new { message = "Authenticated company not found." });
 
             // جلب جميع المستخدمين الذين لديهم نفس CompanyId
-            var users = await _userManager.Users
-                .Where(u => u.CompanyId == currentCompany.Id)
-                .ToListAsync();
+            var users = _userRepository.Get(expression: e => e.CompanyId == currentCompany.Id, includes: [
+                e=>e.Employees,
+                ]);
 
             if (!users.Any())
                 return NotFound(new { message = "No users found for this company." });
 
-            // تجهيز البيانات للإرجاع
-            var userResponses = users.Select(user => new
-            {
-                user.Id,
-                user.Email,
-                user.UserName,
-                user.MainImg,
-                user.Address,
-                user.CompanyId,
-            });
+            var userResponses = users.Adapt<IEnumerable<EmployeeUserResponse>>();
 
             return Ok(new
             {
@@ -176,6 +106,7 @@ namespace CompanyTraining.Controllers
             var user = await _userManager.FindByIdAsync(id);
             if (user == null)
                 return NotFound(new { message = "User not found" });
+
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);

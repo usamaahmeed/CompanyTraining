@@ -16,9 +16,12 @@
 
             config.NewConfig<Subscribe, CompanyResponse>()
                    .Map(des => des.PackageName, src => src.Package.Name)
-                   .Map(des => des.UserName ,src=>src.ApplicationCompany.UserName);
+                   .Map(des => des.UserName, src => src.ApplicationCompany.UserName)
+                   .Map(des => des.Id, src => src.ApplicationUserId);
 
 
+            config.NewConfig<Course, CourseResponse>()
+              .Map(des => des.CategoryName, src => src.Category.Name);
 
             //config.NewConfig<Cart, CartResponse>()
             //    .Map(dest => dest, src => src.Product)

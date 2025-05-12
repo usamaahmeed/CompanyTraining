@@ -11,108 +11,77 @@ namespace CompanyTraining.Areas.Admin.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly ISubscribeRepository _subscribeRepository;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _applicationDbContext;
+        private readonly IUserRepository _userRepository;
 
-        public CompanyController(IUserRepository userRepository,ISubscribeRepository subscribeRepository , UserManager<ApplicationUser> userManager, ApplicationDbContext applicationDbContext )
+       private void RemoveImageForCompany(string imgName)
+        {
+            var oldPath = Path.Combine(Directory.GetCurrentDirectory(),"Images/company/mainimgs",imgName);
+            if (System.IO.File.Exists(oldPath))
+            {
+                System.IO.File.Delete(oldPath);
+            }
+        }
+        private void RemoveImagesRangeForEmplyess(IEnumerable<ApplicationUser> applicationUsers)
+        {
+            foreach (var employee in applicationUsers) 
+            {
+                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "Images/employees/mainimgs", employee.MainImg!);
+                if (System.IO.File.Exists(oldPath))
+                {
+                    System.IO.File.Delete(oldPath);
+                }
+            }
+        }
+        public CompanyController(IUserRepository userRepository,ISubscribeRepository subscribeRepository,IUserRepository _userRepository,UserManager<ApplicationUser> userManager, ApplicationDbContext applicationDbContext )
         {
             this._subscribeRepository = subscribeRepository;
-            _userManager = userManager;
-            _applicationDbContext = applicationDbContext;
+            this._userRepository = _userRepository;
         }
 
         [HttpGet("GetAll")]
         public IActionResult GetAll()
         {
             var subscriptions = _subscribeRepository.Get(includes: [
-                e => e.Package,
-        e => e.ApplicationCompany
-            ]).ToList();
-
-            var companyResponses = subscriptions
-                .Where(sub => sub.ApplicationCompany != null)
-                .Select(sub => new CompanyResponse
-                {
-                    Id = sub.ApplicationCompany!.Id,
-                    UserName = sub.ApplicationCompany.UserName ?? string.Empty,
-                    PackageName = sub.Package?.Name ?? string.Empty,
-                    SubscriptionStartDate = sub.SubscriptionStartDate,
-                    SubscriptionEndDate = sub.SubscriptionEndDate
-                })
-                .DistinctBy(c => c.Id)
-                .ToList();
-
+                    e => e.Package,
+                    e => e.ApplicationCompany
+                  ]).ToList();
+            var data = subscriptions.Adapt<IEnumerable<CompanyResponse>>();
             return Ok(new
             {
                 Message = "تم جلب الشركات بنجاح",
                 Success = true,
-                Data = companyResponses
+                Data = data
             });
         }
-
-
         [HttpDelete("DeleteCompany/{id}")]
         public async Task<IActionResult> DeleteCompany([FromRoute] string id)
         {
-            var company = await _applicationDbContext.Users
-                .Include(u => u.Employees)
-                .FirstOrDefaultAsync(u => u.Id == id);
+            var company = _userRepository.GetOne(expression: e => e.Id== id, includes: [
+                e=>e.Employees,
+                ]);
 
             if (company == null)
                 return NotFound(new { message = "الشركة غير موجودة" });
 
             if (company.Employees != null && company.Employees.Any())
             {
-                _applicationDbContext.Users.RemoveRange(company.Employees);
+                _userRepository.RemoveRange(company.Employees);
+                RemoveImagesRangeForEmplyess(company.Employees);
             }
-
-            _applicationDbContext.Users.Remove(company);
-
-            try
-            {
-                await _applicationDbContext.SaveChangesAsync();
+            RemoveImageForCompany(company.MainImg!);
+            await _userRepository.DeleteAsync(company);
                 return Ok(new { 
                     message = "تم حذف الشركة والموظفين بنجاح",
                     success = true,
-
                 });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "حدث خطأ أثناء الحذف", error = ex.Message });
-            }
         }
 
-
-
- 
-
-
-
-
-
-        //[HttpGet("GetAll")]
-        //public IActionResult GetAll()
-        //{
-        //    var subscribesWithComapny = _subscribeRepository.Get(includes: [
-        //        e=>e.Package,
-        //        e=>e.ApplicationCompany,
-        //        ]);
-
-        //    var data = subscribesWithComapny.Adapt<IEnumerable<CompanyResponse>>();
-        //     return Ok(new
-        //    {
-        //        Message = "Get company Successfully",
-        //        Success = true,
-        //        Data = new
-        //        {
-        //            id = subscribesWithComapny,
-        //            data
-        //        }
-
-        //     });
-        //}
-
+        [HttpGet("GetCount")]
+        public IActionResult GetCompanyCount()
+        {
+            var companyCount = _subscribeRepository.Get().Count();
+            return Ok(companyCount);
+        }
 
         [HttpGet("GetRevenue")]
         public IActionResult GetRevenue()
@@ -129,9 +98,6 @@ namespace CompanyTraining.Areas.Admin.Controllers
                 {
                     total_revenue
                 }
-
-                
-
             });
           
         }

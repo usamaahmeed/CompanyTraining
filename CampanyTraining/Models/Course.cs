@@ -14,5 +14,8 @@
         public Quiz Quiz { get; set; } = null!;
         public ICollection<UserCourse> UserCourses { get; set; } = null!;
 
+        public string? ApplicationUserId { get; set; }
+        public ApplicationUser Company { get; set; } = null!;
+
     }
 }

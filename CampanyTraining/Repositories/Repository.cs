@@ -47,7 +47,6 @@ namespace CompanyTraining.Repositories
         {
             _dbSet.Remove(entity);
             await CommitAsync(cancellationToken);
-
             return entity;
         }
 

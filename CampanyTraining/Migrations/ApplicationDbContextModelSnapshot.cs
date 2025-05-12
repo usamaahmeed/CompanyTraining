@@ -87,6 +87,10 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CompanyId");
 
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasFilter("[Email] IS NOT NULL");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -148,6 +152,9 @@ namespace CompanyTraining.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
@@ -169,6 +176,8 @@ namespace CompanyTraining.Migrations
                         .HasColumnType("bit");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("CategoryId");
 
@@ -571,6 +580,11 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.Course", b =>
                 {
+                    b.HasOne("CompanyTraining.Models.ApplicationUser", "Company")
+                        .WithMany("Courses")
+                        .HasForeignKey("ApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("CompanyTraining.Models.Category", "Category")
                         .WithMany("Courses")
                         .HasForeignKey("CategoryId")
@@ -578,6 +592,8 @@ namespace CompanyTraining.Migrations
                         .IsRequired();
 
                     b.Navigation("Category");
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Lesson", b =>
@@ -759,6 +775,8 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("Courses");
+
                     b.Navigation("Employees");
 
                     b.Navigation("Subscribes");
