@@ -7,6 +7,8 @@ namespace CompanyTraining.Data
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<ApplicationUser> ApplicationCompanies { get; set; }
+        public DbSet<Question> Question { get; set; }
+        public DbSet<Choice> Choices { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -16,7 +18,6 @@ namespace CompanyTraining.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.Entity<Course>().HasOne(e => e.Quiz).WithOne(u => u.Course).HasForeignKey<Quiz>(e => e.CourseId);
 
             builder.Entity<Certificate>().HasOne(e => e.UserCourse).WithOne(e => e.Certificate).HasForeignKey<UserCourse>(e => e.CertificateId);
 

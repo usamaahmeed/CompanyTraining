@@ -4,6 +4,7 @@ using CompanyTraining.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompanyTraining.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250528054143_addNullableToQuiz")]
+    partial class addNullableToQuiz
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -122,7 +125,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Category", (string)null);
+                    b.ToTable("Category");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Certificate", b =>
@@ -141,7 +144,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Certificate", (string)null);
+                    b.ToTable("Certificate");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Choice", b =>
@@ -166,7 +169,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("Choices", (string)null);
+                    b.ToTable("Choices");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Course", b =>
@@ -203,7 +206,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Course", (string)null);
+                    b.ToTable("Course");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Lesson", b =>
@@ -232,7 +235,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("ModuleId");
 
-                    b.ToTable("Lesson", (string)null);
+                    b.ToTable("Lesson");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Module", b =>
@@ -254,7 +257,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Module", (string)null);
+                    b.ToTable("Module");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Package", b =>
@@ -281,7 +284,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Package", (string)null);
+                    b.ToTable("Package");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Question", b =>
@@ -291,10 +294,6 @@ namespace CompanyTraining.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
 
                     b.Property<double>("Mark")
                         .HasColumnType("float");
@@ -311,11 +310,9 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationUserId");
-
                     b.HasIndex("QuizId");
 
-                    b.ToTable("Question", (string)null);
+                    b.ToTable("Question");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Quiz", b =>
@@ -346,7 +343,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Quiz", (string)null);
+                    b.ToTable("Quiz");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Subscribe", b =>
@@ -372,7 +369,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("PackageId");
 
-                    b.ToTable("Subscribe", (string)null);
+                    b.ToTable("Subscribe");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.UserAnswer", b =>
@@ -393,7 +390,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("UserQuizAttemptId");
 
-                    b.ToTable("UserAnswer", (string)null);
+                    b.ToTable("UserAnswer");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.UserCourse", b =>
@@ -421,7 +418,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("UserCourse", (string)null);
+                    b.ToTable("UserCourse");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.UserQuizAttempt", b =>
@@ -457,7 +454,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("QuizId");
 
-                    b.ToTable("UserQuizAttempt", (string)null);
+                    b.ToTable("UserQuizAttempt");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -667,17 +664,9 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.Question", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", "Company")
-                        .WithMany("Questions")
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("CompanyTraining.Models.Quiz", "Quiz")
                         .WithMany("Questions")
                         .HasForeignKey("QuizId");
-
-                    b.Navigation("Company");
 
                     b.Navigation("Quiz");
                 });
@@ -831,8 +820,6 @@ namespace CompanyTraining.Migrations
                     b.Navigation("Courses");
 
                     b.Navigation("Employees");
-
-                    b.Navigation("Questions");
 
                     b.Navigation("Subscribes");
 

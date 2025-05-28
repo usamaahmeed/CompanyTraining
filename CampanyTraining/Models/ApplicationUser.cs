@@ -15,5 +15,7 @@ namespace CompanyTraining.Models
         public IEnumerable<UserCourse> UserCourses { get; set; } = null!;
         public IEnumerable<UserQuizAttempt> UserQuizAttempts { get; set; } = null!;
         public IEnumerable<Course>? Courses { get; set; }
+
+        public ICollection<Question>? Questions { get; set; } 
     }
 }

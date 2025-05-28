@@ -106,6 +106,9 @@ namespace CompanyTraining
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
             builder.Services.AddScoped<IModuleRepository,ModuleRepository>();
             builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+            builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+            builder.Services.AddScoped<IQuestionRepository,QuestionRepository>();
+
             builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailConfiguration"));
             builder.Services.AddTransient<IEmailSender, EmailSender>();
 

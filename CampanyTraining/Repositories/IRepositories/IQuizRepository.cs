@@ -2,5 +2,6 @@
 {
     public interface IQuizRepository : IRepository<Quiz>
     {
+     
     }
 }
