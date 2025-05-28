@@ -33,7 +33,6 @@ namespace CompanyTraining.Repositories
         {
             await _dbSet.AddAsync(entity, cancellationToken);
             await CommitAsync(cancellationToken);
-
             return entity;
         }
         public async Task<T> EditAsync(T entity, CancellationToken cancellationToken = default)

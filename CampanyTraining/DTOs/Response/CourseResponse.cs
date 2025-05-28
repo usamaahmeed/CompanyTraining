@@ -12,7 +12,6 @@ namespace CompanyTraining.DTOs.Response
         public bool isActive { get; set; }
         public string CategoryName { get; set; } = string.Empty;
 
-
     }
 
 }
