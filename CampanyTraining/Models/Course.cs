@@ -10,8 +10,8 @@
         public int CategoryId { get; set; }
         public Category Category { get; set; } = null!;
         public ICollection<Module> Modules { get; set; } = null!;
-        public int QuizId { get; set; }
-        public Quiz Quiz { get; set; } = null!;
+
+        public ICollection<Quiz>? quizzes { get; set; }
         public ICollection<UserCourse> UserCourses { get; set; } = null!;
 
         public string? ApplicationUserId { get; set; }

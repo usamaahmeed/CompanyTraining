@@ -1,7 +1,6 @@
 ﻿namespace CompanyTraining.Repositories.IRepositories
 {
-    public interface IQuizRepository : IRepository<Quiz>
+    public interface IChoiceRepository : IRepository<Choice>
     {
-     
     }
 }

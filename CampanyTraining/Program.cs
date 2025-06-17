@@ -1,9 +1,11 @@
-﻿using CompanyTraining.Services;
+﻿using CloudinaryDotNet;
+using CompanyTraining.Services;
 using CompanyTraining.Utility;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Stripe;
@@ -47,7 +49,17 @@ namespace CompanyTraining
             builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
             StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
-
+            builder.Services.Configure<CloudianrySettings>(
+               builder.Configuration.GetSection("CloudianrySettings")
+               );
+            builder.Services.AddSingleton<Cloudinary>(
+                sp =>
+                {
+                    var config = sp.GetRequiredService<IOptions<CloudianrySettings>>().Value;
+                    var account = new CloudinaryDotNet.Account(config.CloudName, config.ApiKey, config.ApiSecret);
+                    return new Cloudinary(account);
+                }
+              );
             // ✅ Prevent redirects to login page for API requests
             builder.Services.ConfigureApplicationCookie(options =>
             {
@@ -94,6 +106,12 @@ namespace CompanyTraining
             builder.Services.AddScoped<ICourseRepository, CourseRepository>();
             builder.Services.AddScoped<IModuleRepository,ModuleRepository>();
             builder.Services.AddScoped<ILessonRepository, LessonRepository>();
+            builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+            builder.Services.AddScoped<IQuestionRepository,QuestionRepository>();
+            builder.Services.AddScoped<IEmplyeeRepository, EmplyeeRepository>();
+            builder.Services.AddScoped<IUserCourseRepository, UserCourseRepository>();
+            builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
+
 
             builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailConfiguration"));
             builder.Services.AddTransient<IEmailSender, EmailSender>();

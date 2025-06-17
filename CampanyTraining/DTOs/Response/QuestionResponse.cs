@@ -1,16 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CompanyTraining.DTOs.Request
+namespace CompanyTraining.DTOs.Response
 {
-    public class QuestionRequest
+    public class QuestionResponse
     {
-        [Required]
+        public int Id { get; set; }
         public string QuestionHeader { get; set; } = string.Empty;
 
-        [Required]
-        [EnumDataType(typeof(enQuestionLevel))]
         public enQuestionLevel QuestionLevel { get; set; }
-        [Required]
         public double Mark { get; set; }
     }
 }

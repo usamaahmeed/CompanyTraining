@@ -4,6 +4,7 @@ using CompanyTraining.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompanyTraining.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250517010400_alterVideoName")]
+    partial class alterVideoName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -122,7 +125,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("ApplicationUserId");
 
-                    b.ToTable("Category", (string)null);
+                    b.ToTable("Category");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Certificate", b =>
@@ -141,32 +144,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Certificate", (string)null);
-                });
-
-            modelBuilder.Entity("CompanyTraining.Models.Choice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ChoiceText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsCorrect")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("QuestionId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QuestionId");
-
-                    b.ToTable("Choices", (string)null);
+                    b.ToTable("Certificate");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Course", b =>
@@ -190,6 +168,9 @@ namespace CompanyTraining.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("QuizId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -203,7 +184,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Course", (string)null);
+                    b.ToTable("Course");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Lesson", b =>
@@ -221,7 +202,7 @@ namespace CompanyTraining.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("VideoUrl")
+                    b.Property<string>("VideoName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -232,7 +213,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("ModuleId");
 
-                    b.ToTable("Lesson", (string)null);
+                    b.ToTable("Lesson");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Module", b =>
@@ -254,7 +235,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Module", (string)null);
+                    b.ToTable("Module");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Package", b =>
@@ -281,7 +262,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Package", (string)null);
+                    b.ToTable("Package");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Question", b =>
@@ -292,9 +273,8 @@ namespace CompanyTraining.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<bool>("CorrectAnswer")
+                        .HasColumnType("bit");
 
                     b.Property<double>("Mark")
                         .HasColumnType("float");
@@ -303,19 +283,14 @@ namespace CompanyTraining.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("QuestionLevel")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("QuizId")
+                    b.Property<int>("QuizId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApplicationUserId");
-
                     b.HasIndex("QuizId");
 
-                    b.ToTable("Question", (string)null);
+                    b.ToTable("Question");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Quiz", b =>
@@ -329,12 +304,6 @@ namespace CompanyTraining.Migrations
                     b.Property<int>("CourseId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsGenerated")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("NumberOfQuestions")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -344,9 +313,10 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("CourseId")
+                        .IsUnique();
 
-                    b.ToTable("Quiz", (string)null);
+                    b.ToTable("Quiz");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Subscribe", b =>
@@ -372,7 +342,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("PackageId");
 
-                    b.ToTable("Subscribe", (string)null);
+                    b.ToTable("Subscribe");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.UserAnswer", b =>
@@ -393,7 +363,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("UserQuizAttemptId");
 
-                    b.ToTable("UserAnswer", (string)null);
+                    b.ToTable("UserAnswer");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.UserCourse", b =>
@@ -421,7 +391,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("UserCourse", (string)null);
+                    b.ToTable("UserCourse");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.UserQuizAttempt", b =>
@@ -436,17 +406,14 @@ namespace CompanyTraining.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("QuizId")
                         .HasColumnType("int");
 
                     b.Property<int>("Score")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("TotalQuestions")
+                        .HasColumnType("int");
 
                     b.Property<bool>("isPass")
                         .HasColumnType("bit");
@@ -457,7 +424,7 @@ namespace CompanyTraining.Migrations
 
                     b.HasIndex("QuizId");
 
-                    b.ToTable("UserQuizAttempt", (string)null);
+                    b.ToTable("UserQuizAttempt");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -614,17 +581,6 @@ namespace CompanyTraining.Migrations
                     b.Navigation("ApplicationCompany");
                 });
 
-            modelBuilder.Entity("CompanyTraining.Models.Choice", b =>
-                {
-                    b.HasOne("CompanyTraining.Models.Question", "Question")
-                        .WithMany("Choices")
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Question");
-                });
-
             modelBuilder.Entity("CompanyTraining.Models.Course", b =>
                 {
                     b.HasOne("CompanyTraining.Models.ApplicationUser", "Company")
@@ -667,17 +623,11 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.Question", b =>
                 {
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", "Company")
-                        .WithMany("Questions")
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("CompanyTraining.Models.Quiz", "Quiz")
                         .WithMany("Questions")
-                        .HasForeignKey("QuizId");
-
-                    b.Navigation("Company");
+                        .HasForeignKey("QuizId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Quiz");
                 });
@@ -685,8 +635,8 @@ namespace CompanyTraining.Migrations
             modelBuilder.Entity("CompanyTraining.Models.Quiz", b =>
                 {
                     b.HasOne("CompanyTraining.Models.Course", "Course")
-                        .WithMany("quizzes")
-                        .HasForeignKey("CourseId")
+                        .WithOne("Quiz")
+                        .HasForeignKey("CompanyTraining.Models.Quiz", "CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -832,8 +782,6 @@ namespace CompanyTraining.Migrations
 
                     b.Navigation("Employees");
 
-                    b.Navigation("Questions");
-
                     b.Navigation("Subscribes");
 
                     b.Navigation("UserCourses");
@@ -856,9 +804,10 @@ namespace CompanyTraining.Migrations
                 {
                     b.Navigation("Modules");
 
-                    b.Navigation("UserCourses");
+                    b.Navigation("Quiz")
+                        .IsRequired();
 
-                    b.Navigation("quizzes");
+                    b.Navigation("UserCourses");
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Module", b =>
@@ -873,8 +822,6 @@ namespace CompanyTraining.Migrations
 
             modelBuilder.Entity("CompanyTraining.Models.Question", b =>
                 {
-                    b.Navigation("Choices");
-
                     b.Navigation("UserAnswers");
                 });
 
