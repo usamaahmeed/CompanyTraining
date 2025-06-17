@@ -108,6 +108,10 @@ namespace CompanyTraining
             builder.Services.AddScoped<ILessonRepository, LessonRepository>();
             builder.Services.AddScoped<IQuizRepository, QuizRepository>();
             builder.Services.AddScoped<IQuestionRepository,QuestionRepository>();
+            builder.Services.AddScoped<IEmplyeeRepository, EmplyeeRepository>();
+            builder.Services.AddScoped<IUserCourseRepository, UserCourseRepository>();
+            builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
+
 
             builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailConfiguration"));
             builder.Services.AddTransient<IEmailSender, EmailSender>();

@@ -9,6 +9,7 @@ namespace CompanyTraining.Data
         public DbSet<ApplicationUser> ApplicationCompanies { get; set; }
         public DbSet<Question> Question { get; set; }
         public DbSet<Choice> Choices { get; set; }
+        public DbSet<Quiz> Quiz { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {

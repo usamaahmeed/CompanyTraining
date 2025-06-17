@@ -23,9 +23,23 @@
             config.NewConfig<Course, CourseResponse>()
               .Map(des => des.CategoryName, src => src.Category.Name);
 
+            config.NewConfig<Course,GetCoursesForUserResponse>()
+              .Map(des => des.CategoryName, src => src.Category.Name);
             //config.NewConfig<Cart, CartResponse>()
             //    .Map(dest => dest, src => src.Product)
             //    .Map(dest => dest.Count, src => src.Count);
+
+            config.NewConfig<Module, ViewCourseModulesResponse>();
+
+            config.NewConfig<Lesson, GetLessonsResponse>();
+
+            config.NewConfig<ChoiceDto,Choice>();
+
+            config.NewConfig<UpdateChoiceDto, Choice>();
+
+            config.NewConfig<Quiz,GetExamWithQuestionsResponse>();
+            config.NewConfig<Question, GetQuestionResponseDto>();
+            config.NewConfig<Choice,GetChoiceTextResponse>();
         }
     }
 }
