@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace CompanyTraining.Models
 {
@@ -7,10 +9,17 @@ namespace CompanyTraining.Models
     {
 
         public int QuestionId { get; set; }
+        [JsonIgnore]
+        [ValidateNever]
         public Question Question { get; set; } = null!;
         public int UserQuizAttemptId { get; set; }
+        [JsonIgnore]
+        [ValidateNever]
         public UserQuizAttempt UserQuizAttempt { get; set; } = null!;
-        public bool SelectedAnswer { get; set; }
+        public int SelectedChoiceId { get; set; }
+        [JsonIgnore]
+        [ValidateNever]
+        public Choice SelectedChoice { get; set; } = null!;
         public bool IsCorrect { get; set; }
 
     }
