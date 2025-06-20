@@ -18,6 +18,7 @@ namespace CompanyTraining.Repositories
                 .Include(e=>e.Questions).
                 ThenInclude(e=>e.Choices).
                 FirstOrDefaultAsync();
+
             return quiz;
         }
     }
