@@ -1,4 +1,5 @@
 ﻿using CloudinaryDotNet;
+using CompanyTraining.Background;
 using CompanyTraining.Services;
 using CompanyTraining.Utility;
 using MapsterMapper;
@@ -111,6 +112,16 @@ namespace CompanyTraining
             builder.Services.AddScoped<IEmplyeeRepository, EmplyeeRepository>();
             builder.Services.AddScoped<IUserCourseRepository, UserCourseRepository>();
             builder.Services.AddScoped<IChoiceRepository, ChoiceRepository>();
+            builder.Services.AddScoped<IUserAnswerRepository,UserAnswerRepository>();
+            builder.Services.AddScoped<IUserQuizAttemptRepository,UserQuizAttemptRepository>();
+            builder.Services.AddScoped<IUserLessonRepository,UserLessonRepository>();
+            builder.Services.AddScoped<ICertificateRepository,CertificateRepository>();
+
+
+
+            //Background job
+            builder.Services.AddHostedService<AutoSubmitJob>();
+            builder.Services.AddScoped<AutoSubmitExpiredAttemptsService>();
 
 
             builder.Services.Configure<EmailSetting>(builder.Configuration.GetSection("EmailConfiguration"));

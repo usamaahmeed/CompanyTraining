@@ -4,8 +4,11 @@
     {
         public int Id { get; set; }
         public DateTime IssuedAt { get; set; }
-        public int UserCourseId { get; set; }
-        public UserCourse UserCourse { get; set; } = null!;
+        public string ApplicationUserId { get; set; } = null!;
+        public int CourseId { get; set; }
+
+        public ApplicationUser ApplicationUser { get; set; } = null!;
+        public Course Course { get; set; } = null!;
 
     }
 }

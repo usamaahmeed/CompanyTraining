@@ -23,15 +23,20 @@ namespace CompanyTraining.Areas.User
         private readonly IUserQuizAttemptRepository _userQuizAttemptRepository;
         private readonly IUserAnswerRepository _userAnswerRepository;
         private readonly IChoiceRepository _choiceRepository;
+        private readonly IUserLessonRepository _userLessonRepository;
+        private readonly ICertificateRepository _certificateRepository;
 
         public EmployeeController(IEmplyeeRepository employeeRepository,
-            ICourseRepository courseRepository, IUserCourseRepository userCourseRepository,
+            ICourseRepository courseRepository,
+            IUserCourseRepository userCourseRepository,
             ILessonRepository lessonRepository,
             IModuleRepository moduleRepository,
             IQuizRepository quizRepository,
             IUserQuizAttemptRepository userQuizAttemptRepository,
             IUserAnswerRepository userAnswerRepository,
-            IChoiceRepository choiceRepository
+            IChoiceRepository choiceRepository,
+            IUserLessonRepository userLessonRepository,
+            ICertificateRepository certificateRepository
             )
         {
             this._employeeRepository = employeeRepository;
@@ -43,6 +48,8 @@ namespace CompanyTraining.Areas.User
             this._userQuizAttemptRepository = userQuizAttemptRepository;
             this._userAnswerRepository = userAnswerRepository;
             this._choiceRepository = choiceRepository;
+            this._userLessonRepository = userLessonRepository;
+            this._certificateRepository = certificateRepository;
         }
         [HttpGet]
         public IActionResult GetCoursesForEmployee()
@@ -126,6 +133,36 @@ namespace CompanyTraining.Areas.User
         }
 
 
+        [HttpPut("Courses/{courseId}/Modules/{moduleId}/Lessons/{lessonId}")]
+
+        public async Task<IActionResult> MarkCompletedLesson([FromRoute] int courseId,[FromRoute]int moduleId,[FromRoute]int lessonId)
+        {
+            var employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (employeeId == null) return Unauthorized();
+
+            var userCourse = _userCourseRepository.GetOne(expression:e=>e.ApplicationUserId == employeeId && e.CourseId == courseId);
+            if (userCourse == null) return NotFound("You are not enrolled in the course");
+
+            var lesson = _lessonRepository.GetOne(expression:e=>e.Id == lessonId && e.ModuleId == moduleId && e.Module.CourseId == userCourse.CourseId, includes: [
+                e=>e.Module
+                ]);
+            if (lesson == null) return NotFound("Sorry Lesson Not Found For this module");
+
+            var existing = await _userLessonRepository.Get().AnyAsync(e => e.ApplicationUserId == employeeId && e.LessonId == lessonId);
+            if (!existing)
+            {
+                var lessonMapped =await _userLessonRepository.CreateAsync(new UserLesson(){ 
+                    ApplicationUserId = employeeId,
+                    LessonId = lessonId,
+                    CourseId = courseId,
+                });
+                return Ok(lessonMapped.Adapt<AddUserLessonResponse>());
+            }
+           return BadRequest("You already finished the lesson");
+        }
+
+
+
         [HttpPost("Courses/{courseId}/Exams/{quizId}")]
         public async Task<IActionResult> SubmitExam([FromRoute]int courseId,[FromRoute]int quizId, [FromBody] SubmitQuizDto request )
         {
@@ -152,6 +189,7 @@ namespace CompanyTraining.Areas.User
             {
                 ApplicationUserId = userId,
                 QuizId = quizId,
+                CourseId=courseId,
             });
 
             foreach (var answer in request.Answers)
@@ -185,6 +223,80 @@ namespace CompanyTraining.Areas.User
             });
 
         }
+
+
+        public async Task<bool> HasCompletedCourseAsync(int courseId, string employeeId)
+        {
+
+
+            var moduleForLesson = _moduleRepository.GetOne(expression: e => e.CourseId == courseId);
+            if (moduleForLesson == null) return false;
+
+            var totalLessonsForCourse = await _lessonRepository.Get(expression: e => e.ModuleId == moduleForLesson.Id).CountAsync();
+
+            var viewLessonsByEmployee = await _userLessonRepository.Get(expression: e => e.ApplicationUserId == employeeId && e.CourseId == courseId).CountAsync();
+
+            if (viewLessonsByEmployee < totalLessonsForCourse)
+                return false;
+
+            var totalQuizzezForCourse = await _quizRepository.Get(expression: e => e.CourseId == courseId).CountAsync();
+
+            var passedExams =  await _userQuizAttemptRepository.Get().CountAsync(e => e.ApplicationUserId == employeeId &&e.CourseId==courseId&&!e.isPass);
+
+            if(passedExams < totalQuizzezForCourse)
+                return false;
+
+            return true;
+        }
+
+
+        [HttpPost("Courses/{courseId}")]
+        public async Task<IActionResult> MakeCertificate([FromRoute] int courseId)
+        {
+            var employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (employeeId == null) return Unauthorized();
+
+            if (!await HasCompletedCourseAsync(courseId, employeeId))
+            {
+                var exists =await _certificateRepository.Get().AnyAsync(e => e.ApplicationUserId == employeeId && e.CourseId == courseId);
+                if (exists)
+                    return BadRequest("You Already own a certificate");
+
+                await _certificateRepository.CreateAsync(new Certificate
+                {
+                    ApplicationUserId = employeeId,
+                    IssuedAt = DateTime.Now,
+                    CourseId = courseId,
+                });
+                return Ok();
+            }
+            return BadRequest("Something happeaned while saving the certificate");
+        }
+
+
+        [HttpGet("Courses/{courseId}/Certificate")]
+        public IActionResult GetCertificate([FromRoute]int courseId)
+        {
+            var employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (employeeId == null) return Unauthorized();
+
+            var employee = _employeeRepository.GetOne(expression: e => e.Id == employeeId);
+
+            var certificate = _certificateRepository.GetOne(
+                e => e.ApplicationUserId == employeeId && e.CourseId == courseId,
+                includes: [e => e.Course]);
+
+            if (certificate == null)
+                return NotFound("Certificate not issued yet.");
+
+            var certifcateMapped = certificate.Adapt<GetCertificateResponse>();
+            certifcateMapped.ApplicationUserName = employee.UserName;
+
+            return Ok(certifcateMapped);
+        }
+
+
+
 
     }
 }

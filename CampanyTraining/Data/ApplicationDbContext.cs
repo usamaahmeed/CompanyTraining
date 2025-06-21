@@ -10,6 +10,10 @@ namespace CompanyTraining.Data
         public DbSet<Question> Question { get; set; }
         public DbSet<Choice> Choices { get; set; }
         public DbSet<Quiz> Quiz { get; set; }
+
+        public DbSet<UserLesson> UserLessons { get; set; }
+
+        public DbSet<UserQuizAttempt> UserQuizAttempts { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
@@ -20,7 +24,6 @@ namespace CompanyTraining.Data
         {
             base.OnModelCreating(builder);
 
-            builder.Entity<Certificate>().HasOne(e => e.UserCourse).WithOne(e => e.Certificate).HasForeignKey<UserCourse>(e => e.CertificateId);
 
             builder.Entity<ApplicationUser>().HasIndex(e => e.Email).IsUnique();
 
