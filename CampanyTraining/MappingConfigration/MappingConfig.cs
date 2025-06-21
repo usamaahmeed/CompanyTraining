@@ -40,6 +40,9 @@
             config.NewConfig<Quiz,GetExamWithQuestionsResponse>();
             config.NewConfig<Question, GetQuestionResponseDto>();
             config.NewConfig<Choice,GetChoiceTextResponse>();
+
+            config.NewConfig<Certificate,GetCertificateResponse>()
+                .Map(des=>des.CourseName,src=>src.Course.Title);
         }
     }
 }

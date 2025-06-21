@@ -14,6 +14,7 @@
         public int Score { get; set; }
         public bool isPass { get; set; }
 
+        public int CourseId { get; set; }
         public bool IsSubmitted { get; set; } = false;
         public ICollection<UserAnswer> UserAnswers { get; set; } = null!;
     }

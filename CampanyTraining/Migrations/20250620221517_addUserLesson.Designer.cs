@@ -4,6 +4,7 @@ using CompanyTraining.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CompanyTraining.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250620221517_addUserLesson")]
+    partial class addUserLesson
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -133,21 +136,13 @@ namespace CompanyTraining.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ApplicationUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("IssuedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("UserCourseId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
-
-                    b.HasIndex("CourseId");
 
                     b.ToTable("Certificate");
                 });
@@ -422,7 +417,9 @@ namespace CompanyTraining.Migrations
 
                     b.HasKey("ApplicationUserId", "CourseId");
 
-                    b.HasIndex("CertificateId");
+                    b.HasIndex("CertificateId")
+                        .IsUnique()
+                        .HasFilter("[CertificateId] IS NOT NULL");
 
                     b.HasIndex("CourseId");
 
@@ -441,9 +438,6 @@ namespace CompanyTraining.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
-
                     b.Property<int>("LessonId")
                         .HasColumnType("int");
 
@@ -453,8 +447,6 @@ namespace CompanyTraining.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ApplicationUserId");
-
-                    b.HasIndex("CourseId");
 
                     b.HasIndex("LessonId");
 
@@ -472,9 +464,6 @@ namespace CompanyTraining.Migrations
                     b.Property<string>("ApplicationUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
@@ -657,25 +646,6 @@ namespace CompanyTraining.Migrations
                     b.Navigation("ApplicationCompany");
                 });
 
-            modelBuilder.Entity("CompanyTraining.Models.Certificate", b =>
-                {
-                    b.HasOne("CompanyTraining.Models.ApplicationUser", "ApplicationUser")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CompanyTraining.Models.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApplicationUser");
-
-                    b.Navigation("Course");
-                });
-
             modelBuilder.Entity("CompanyTraining.Models.Choice", b =>
                 {
                     b.HasOne("CompanyTraining.Models.Question", "Question")
@@ -810,8 +780,8 @@ namespace CompanyTraining.Migrations
                         .IsRequired();
 
                     b.HasOne("CompanyTraining.Models.Certificate", "Certificate")
-                        .WithMany()
-                        .HasForeignKey("CertificateId");
+                        .WithOne("UserCourse")
+                        .HasForeignKey("CompanyTraining.Models.UserCourse", "CertificateId");
 
                     b.HasOne("CompanyTraining.Models.Course", "Course")
                         .WithMany("UserCourses")
@@ -834,12 +804,6 @@ namespace CompanyTraining.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CompanyTraining.Models.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("CompanyTraining.Models.Lesson", "Lesson")
                         .WithMany()
                         .HasForeignKey("LessonId")
@@ -847,8 +811,6 @@ namespace CompanyTraining.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
-
-                    b.Navigation("Course");
 
                     b.Navigation("Lesson");
                 });
@@ -941,6 +903,12 @@ namespace CompanyTraining.Migrations
             modelBuilder.Entity("CompanyTraining.Models.Category", b =>
                 {
                     b.Navigation("Courses");
+                });
+
+            modelBuilder.Entity("CompanyTraining.Models.Certificate", b =>
+                {
+                    b.Navigation("UserCourse")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CompanyTraining.Models.Course", b =>
