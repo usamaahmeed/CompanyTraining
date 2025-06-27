@@ -135,7 +135,7 @@ namespace CompanyTraining.Areas.User
         }
 
 
-        [HttpPut("Courses/{courseId}/Modules/{moduleId}/Lessons/{lessonId}")]
+        [HttpPost("Courses/{courseId}/Modules/{moduleId}/Lessons/{lessonId}")]
 
         public async Task<IActionResult> MarkCompletedLesson([FromRoute] int courseId,[FromRoute]int moduleId,[FromRoute]int lessonId)
         {
@@ -227,7 +227,7 @@ namespace CompanyTraining.Areas.User
         }
 
 
-        public async Task<bool> HasCompletedCourseAsync(int courseId, string employeeId)
+        private async Task<bool> HasCompletedCourseAsync(int courseId, string employeeId)
         {
 
             var totalLessonsForCourse = await _lessonRepository.Get(expression: e => e.Module.CourseId == courseId, includes: [

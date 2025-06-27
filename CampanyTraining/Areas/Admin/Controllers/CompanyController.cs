@@ -13,7 +13,7 @@ namespace CompanyTraining.Areas.Admin.Controllers
         private readonly ISubscribeRepository _subscribeRepository;
         private readonly IUserRepository _userRepository;
 
-       private void RemoveImageForCompany(string imgName)
+         private void RemoveImageForCompany(string imgName)
         {
             var oldPath = Path.Combine(Directory.GetCurrentDirectory(),"Images/company/mainimgs",imgName);
             if (System.IO.File.Exists(oldPath))

@@ -1,5 +1,6 @@
 ﻿using CloudinaryDotNet;
 using CompanyTraining.Background;
+using CompanyTraining.Middleware;
 using CompanyTraining.Services;
 using CompanyTraining.Utility;
 using MapsterMapper;
@@ -37,9 +38,13 @@ namespace CompanyTraining
             builder.Services.AddOpenApi();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            {
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                options.EnableSensitiveDataLogging(); // ✨ أضف السطر ده
 
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            });
+
+        builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
                 options.SignIn.RequireConfirmedEmail = false;
                 options.SignIn.RequireConfirmedPhoneNumber = false;
@@ -116,7 +121,7 @@ namespace CompanyTraining
             builder.Services.AddScoped<IUserQuizAttemptRepository,UserQuizAttemptRepository>();
             builder.Services.AddScoped<IUserLessonRepository,UserLessonRepository>();
             builder.Services.AddScoped<ICertificateRepository,CertificateRepository>();
-
+            builder.Services.AddScoped<ICompanyRepository, CompanyRepository>();
 
 
             //Background job
@@ -142,6 +147,7 @@ namespace CompanyTraining
                 app.UseSwagger();
                 app.UseSwaggerUI();
                 //app.MapScalarApiReference();
+
             }
 
             // Initialize DB
@@ -161,6 +167,8 @@ namespace CompanyTraining
             app.UseCors(MyAllowSpecificOrigins);
             app.UseRouting();
             app.UseAuthentication();
+            app.UseMiddleware<CompanySubscriptionMiddleware>();
+
             app.UseAuthorization();
             app.MapControllers();
             app.Run();
