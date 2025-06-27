@@ -1,4 +1,5 @@
 ﻿using CompanyTraining.Models;
+using CompanyTraining.Services;
 using MapsterMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace CompanyTraining.Areas.User
 {
@@ -133,7 +135,7 @@ namespace CompanyTraining.Areas.User
         }
 
 
-        [HttpPut("Courses/{courseId}/Modules/{moduleId}/Lessons/{lessonId}")]
+        [HttpPost("Courses/{courseId}/Modules/{moduleId}/Lessons/{lessonId}")]
 
         public async Task<IActionResult> MarkCompletedLesson([FromRoute] int courseId,[FromRoute]int moduleId,[FromRoute]int lessonId)
         {
@@ -225,14 +227,12 @@ namespace CompanyTraining.Areas.User
         }
 
 
-        public async Task<bool> HasCompletedCourseAsync(int courseId, string employeeId)
+        private async Task<bool> HasCompletedCourseAsync(int courseId, string employeeId)
         {
 
-
-            var moduleForLesson = _moduleRepository.GetOne(expression: e => e.CourseId == courseId);
-            if (moduleForLesson == null) return false;
-
-            var totalLessonsForCourse = await _lessonRepository.Get(expression: e => e.ModuleId == moduleForLesson.Id).CountAsync();
+            var totalLessonsForCourse = await _lessonRepository.Get(expression: e => e.Module.CourseId == courseId, includes: [
+                e=>e.Module
+                ]).CountAsync();
 
             var viewLessonsByEmployee = await _userLessonRepository.Get(expression: e => e.ApplicationUserId == employeeId && e.CourseId == courseId).CountAsync();
 
@@ -241,9 +241,13 @@ namespace CompanyTraining.Areas.User
 
             var totalQuizzezForCourse = await _quizRepository.Get(expression: e => e.CourseId == courseId).CountAsync();
 
-            var passedExams =  await _userQuizAttemptRepository.Get().CountAsync(e => e.ApplicationUserId == employeeId &&e.CourseId==courseId&&!e.isPass);
+            var passedExams = await _userQuizAttemptRepository.Get()
+                .Where(e => e.ApplicationUserId == employeeId && e.Quiz.CourseId == courseId && e.isPass)
+                .Select(e => e.QuizId)
+                .Distinct()
+                .CountAsync();
 
-            if(passedExams < totalQuizzezForCourse)
+            if (passedExams < totalQuizzezForCourse)
                 return false;
 
             return true;
@@ -256,11 +260,16 @@ namespace CompanyTraining.Areas.User
             var employeeId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (employeeId == null) return Unauthorized();
 
-            if (!await HasCompletedCourseAsync(courseId, employeeId))
+            var employee = _employeeRepository.GetOne(expression: e => e.Id == employeeId, includes: [
+                e=>e.Company
+                ]); 
+
+
+            if (await HasCompletedCourseAsync(courseId, employeeId))
             {
                 var exists =await _certificateRepository.Get().AnyAsync(e => e.ApplicationUserId == employeeId && e.CourseId == courseId);
                 if (exists)
-                    return BadRequest("You Already own a certificate");
+                    return BadRequest("You already own a certificate");
 
                 await _certificateRepository.CreateAsync(new Certificate
                 {
@@ -268,9 +277,16 @@ namespace CompanyTraining.Areas.User
                     IssuedAt = DateTime.Now,
                     CourseId = courseId,
                 });
-                return Ok();
+
+                var certificate = _certificateRepository.GetOne(
+              e => e.ApplicationUserId == employeeId && e.CourseId == courseId,
+              includes: [e => e.Course]);
+
+                var pdf = CertificatePdfGenerator.Generate(employee.UserName, certificate.Course.Title, DateTime.Now, employee.Company.UserName);
+
+                return File(pdf, "application/pdf", $"{employee.UserName}-{certificate.Course.Title}-Certificate.pdf");
             }
-            return BadRequest("Something happeaned while saving the certificate");
+            return BadRequest("You must complete all lessons and pass all quizzes.");
         }
 
 

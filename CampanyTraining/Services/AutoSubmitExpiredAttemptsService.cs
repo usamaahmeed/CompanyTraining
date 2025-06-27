@@ -16,7 +16,7 @@ namespace CompanyTraining.Services
             var now = DateTime.Now;
 
             var pendingAttempts = await _applicationDbContext.UserQuizAttempts.Include(e => e.UserAnswers)
-                .ThenInclude(e => e.Question).Include(e => e.Quiz).Where(e => !e.IsSubmitted && e.EndDate <= e.StartDate).ToListAsync();
+                .ThenInclude(e => e.Question).Include(e => e.Quiz).Where(e => !e.IsSubmitted && e.EndDate <= now).ToListAsync();
 
             foreach (var attempt in pendingAttempts)
             {

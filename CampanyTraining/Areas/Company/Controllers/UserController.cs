@@ -16,12 +16,16 @@ namespace CompanyTraining.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IPackageRepository _packageRepository;
+        private readonly ISubscribeRepository _subscribeRepository;
         private readonly IUserRepository _userRepository;
         private readonly JwtOptions _jwtOptions;
 
-        public UserController(UserManager<ApplicationUser> userManager,IUserRepository userRepository,JwtOptions jwtOptions)
+        public UserController(UserManager<ApplicationUser> userManager,IPackageRepository packageRepository,ISubscribeRepository subscribeRepository,IUserRepository userRepository,JwtOptions jwtOptions)
         {
             this._userManager = userManager;
+            this._packageRepository = packageRepository;
+            this._subscribeRepository = subscribeRepository;
             this._userRepository = userRepository;
             this._jwtOptions = jwtOptions;
         }
@@ -114,6 +118,7 @@ namespace CompanyTraining.Controllers
         }
 
 
+   
     }
 } 
 

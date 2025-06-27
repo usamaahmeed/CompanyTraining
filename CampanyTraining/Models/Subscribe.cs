@@ -7,13 +7,15 @@ namespace CompanyTraining.Models
     public class Subscribe
     {
         public int PackageId { get; set; }
-        public DateTime? SubscriptionStartDate { get; set; }
-        public DateTime? SubscriptionEndDate { get; set; }
+        public DateTime SubscriptionStartDate { get; set; }
+        public DateTime SubscriptionEndDate { get; set; }
         public Package Package { get; set; } = null!;
         public string ApplicationUserId { get; set; } = null!;
 
         public string SessionId { get; set; } = string.Empty;
         public ApplicationUser ApplicationCompany { get; set; } = null!;
+
+        public bool IsBlocked => SubscriptionEndDate > DateTime.Now;
 
 
     }
